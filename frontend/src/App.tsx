@@ -75,7 +75,7 @@ function App() {
   const [focusedReportId, setFocusedReportId] = useState<string | null>(null)
   const [trafficView, setTrafficView] = useState<'all' | 'flow' | 'incidents'>('all')
 
-  const [route, setRoute] = useState<{ origin: string; destination: string; routeType?: string } | null>(null)
+  const [route, setRoute] = useState<{ origin: string; destination: string; routeType?: string; transportMode?: string } | null>(null)
   const mapRef = useRef<google.maps.Map | null>(null)
 
   const handleMapClick = (lat: number, lng: number) => {
@@ -108,14 +108,19 @@ function App() {
     setFocusedReportId(reportId)
   }
 
-  const handleRouteSelect = (origin: string, destination: string, routeType: string) => {
-    console.log('Route selected:', { origin, destination, routeType })
-    setRoute({ origin, destination, routeType })
+  const handleRouteSelect = (origin: string, destination: string, routeType: string, transportMode: string) => {
+    console.log('Route selected:', { origin, destination, routeType, transportMode })
+    setRoute({ origin, destination, routeType, transportMode })
     // Here you would integrate with Google Directions API to draw the route on map
     // The routeType parameter can be used to configure the route calculation:
     // - 'fastest': Optimize for time
     // - 'shortest': Optimize for distance
     // - 'avoidTolls': Avoid toll roads
+    // The transportMode parameter can be used to set the travel mode:
+    // - 'driving': Car route
+    // - 'walking': Walking route
+    // - 'bicycling': Cycling route
+    // - 'transit': Public transit route
   }
 
   const handleMapReady = (map: google.maps.Map) => {
@@ -167,6 +172,12 @@ function App() {
                  </p>
                </div>
              </section>
+
+             {/* Route Planner Section */}
+             <RoutePlannerSection
+               onRouteSelect={handleRouteSelect}
+               route={route}
+             />
 
              {/* Map Section */}
       <section className="relative px-6 py-8">
@@ -376,12 +387,6 @@ function App() {
            </div>
          )}
       </section>
-
-             {/* Route Planner Section */}
-             <RoutePlannerSection
-               onRouteSelect={handleRouteSelect}
-               route={route}
-             />
 
                    {/* Live Traffic Section */}
              <section className="w-full px-6 py-8 relative">
