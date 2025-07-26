@@ -115,12 +115,10 @@ function App() {
 
       {/* Feed Section */}
       <section className="w-full px-6 py-12 bg-white border-t">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between mb-4">
             <Feed reports={reports} onFocusReport={handleFocusReport} />
           </div>
-
-          
         </div>
       </section>
 
