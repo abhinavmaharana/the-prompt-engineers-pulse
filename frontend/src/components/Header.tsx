@@ -1,13 +1,43 @@
 
 import { motion } from 'framer-motion'
-import { PlusIcon, ShareIcon } from '@heroicons/react/24/outline'
+import { PlusIcon } from '@heroicons/react/24/outline'
 import { Button } from '@/components/ui/button'
+// import { useState, useEffect } from 'react'
 
 interface HeaderProps {
   onReportClick: () => void
 }
 
 const Header = ({ onReportClick }: HeaderProps) => {
+  // const [isDark, setIsDark] = useState(false)
+
+  // // Initialize theme from localStorage or system preference
+  // useEffect(() => {
+  //   const savedTheme = localStorage.getItem('theme')
+  //   const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+    
+  //   if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) {
+  //     setIsDark(true)
+  //     document.documentElement.classList.add('dark')
+  //   } else {
+  //     setIsDark(false)
+  //     document.documentElement.classList.remove('dark')
+  //   }
+  // }, [])
+
+  // const toggleTheme = () => {
+  //   const newTheme = !isDark
+  //   setIsDark(newTheme)
+    
+  //   if (newTheme) {
+  //     document.documentElement.classList.add('dark')
+  //     localStorage.setItem('theme', 'dark')
+  //   } else {
+  //     document.documentElement.classList.remove('dark')
+  //     localStorage.setItem('theme', 'light')
+  //   }
+  // }
+
   return (
     <motion.header 
       initial={{ y: -100, opacity: 0 }}
@@ -35,10 +65,20 @@ const Header = ({ onReportClick }: HeaderProps) => {
 
           {/* Actions */}
           <div className="flex items-center gap-4">
-            {/* Share Icon */}
-            <Button variant="ghost" size="icon" className="hidden md:flex bg-white/50 backdrop-blur-sm border border-white/30 hover:bg-white/80 transition-all duration-300 shadow-glass">
-              <ShareIcon className="w-4 h-4" />
-            </Button>
+            {/* Theme Toggle */}
+            {/* <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={toggleTheme}
+              className="hidden md:flex bg-white/50 backdrop-blur-sm border border-white/30 hover:bg-white/80 transition-all duration-300 shadow-glass"
+              aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {isDark ? (
+                <SunIcon className="w-4 h-4" />
+              ) : (
+                <MoonIcon className="w-4 h-4" />
+              )}
+            </Button> */}
 
             {/* Mobile Controls */}
             <div className="flex items-center gap-2 md:hidden">

@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { AnimatePresence } from 'framer-motion'
-import { PlusIcon, MinusIcon, MapIcon } from '@heroicons/react/24/outline'
+import { PlusIcon, MinusIcon } from '@heroicons/react/24/outline'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import Header from './components/Header'
@@ -8,7 +8,7 @@ import MapComponent from './components/MapComponent'
 import ModalWizard from './components/ModalWizard'
 import Feed from './components/Feed'
 import FAB from './components/FAB'
-import RoutePlanner from './components/RoutePlanner'
+import RoutePlannerSection from './components/RoutePlannerSection'
 import LiveTraffic from './components/LiveTraffic'
 
 // WhatsApp Icon Component
@@ -74,8 +74,8 @@ function App() {
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [focusedReportId, setFocusedReportId] = useState<string | null>(null)
   const [trafficView, setTrafficView] = useState<'all' | 'flow' | 'incidents'>('all')
-  const [showRoutePlanner, setShowRoutePlanner] = useState(false)
-  const [route, setRoute] = useState<{ origin: string; destination: string } | null>(null)
+
+  const [route, setRoute] = useState<{ origin: string; destination: string; routeType?: string } | null>(null)
   const mapRef = useRef<google.maps.Map | null>(null)
 
   const handleMapClick = (lat: number, lng: number) => {
@@ -108,11 +108,14 @@ function App() {
     setFocusedReportId(reportId)
   }
 
-  const handleRouteSelect = (origin: string, destination: string) => {
-    console.log('Route selected:', { origin, destination })
-    setRoute({ origin, destination })
-    setShowRoutePlanner(false)
+  const handleRouteSelect = (origin: string, destination: string, routeType: string) => {
+    console.log('Route selected:', { origin, destination, routeType })
+    setRoute({ origin, destination, routeType })
     // Here you would integrate with Google Directions API to draw the route on map
+    // The routeType parameter can be used to configure the route calculation:
+    // - 'fastest': Optimize for time
+    // - 'shortest': Optimize for distance
+    // - 'avoidTolls': Avoid toll roads
   }
 
   const handleMapReady = (map: google.maps.Map) => {
@@ -162,43 +165,6 @@ function App() {
                  <p className="text-gray-500 text-lg font-medium drop-shadow-md">
                    Real-time traffic monitoring and civic issue reporting
                  </p>
-               </div>
-             </section>
-
-             {/* Route Planner Section */}
-             <section className="w-full px-6 py-8 relative">
-               <div className="max-w-7xl mx-auto">
-                 <div className="flex items-center justify-between mb-6">
-                   <div>
-                     <h2 className="text-2xl font-bold text-gray-800 mb-2">Plan Your Route</h2>
-                     <p className="text-gray-600">Find the best route from point A to point B</p>
-                   </div>
-                   <Button
-                     onClick={() => setShowRoutePlanner(true)}
-                     className="bg-primary hover:bg-primary-hover text-white font-semibold px-6 py-2 rounded-lg transition-all duration-300"
-                   >
-                     Plan Route
-                   </Button>
-                 </div>
-                 
-                 <RoutePlanner
-                   open={showRoutePlanner}
-                   onOpenChange={setShowRoutePlanner}
-                   onRouteSelect={handleRouteSelect}
-                 />
-                 
-                 {route && (
-                   <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-                     <div className="flex items-center gap-2 mb-2">
-                       <MapIcon className="w-5 h-5 text-green-600" />
-                       <span className="font-semibold text-green-800">Active Route</span>
-                     </div>
-                     <div className="text-sm text-green-700">
-                       <div><strong>From:</strong> {route.origin}</div>
-                       <div><strong>To:</strong> {route.destination}</div>
-                     </div>
-                   </div>
-                 )}
                </div>
              </section>
 
@@ -410,6 +376,12 @@ function App() {
            </div>
          )}
       </section>
+
+             {/* Route Planner Section */}
+             <RoutePlannerSection
+               onRouteSelect={handleRouteSelect}
+               route={route}
+             />
 
                    {/* Live Traffic Section */}
              <section className="w-full px-6 py-8 relative">

@@ -7,7 +7,7 @@ interface MapComponentProps {
   onMapClick: (lat: number, lng: number) => void
   focusedReportId?: string
   trafficView: 'all' | 'flow' | 'incidents'
-  route?: { origin: string; destination: string } | null
+  route?: { origin: string; destination: string; routeType?: string } | null
   onMapReady?: (map: google.maps.Map) => void
 }
 
@@ -345,12 +345,23 @@ const MapComponent = ({ reports, onMapClick, focusedReportId, trafficView, route
 
          const directionsService = new googleRef.current.maps.DirectionsService()
          
-         directionsService.route(
-           {
-             origin: route.origin,
-             destination: route.destination,
-             travelMode: googleRef.current.maps.TravelMode.DRIVING,
-           },
+         // Configure route options based on route type
+         const routeOptions: google.maps.DirectionsRequest = {
+           origin: route.origin,
+           destination: route.destination,
+           travelMode: googleRef.current.maps.TravelMode.DRIVING,
+         }
+
+         // Add route type specific options
+         if (route.routeType === 'shortest') {
+           routeOptions.optimizeWaypoints = true
+         } else if (route.routeType === 'avoidTolls') {
+           routeOptions.avoidHighways = false
+           routeOptions.avoidTolls = true
+         }
+         // 'fastest' is the default behavior
+
+         directionsService.route(routeOptions,
            (result, status) => {
              if (status === 'OK' && result) {
                console.log('Route calculated successfully:', result)
