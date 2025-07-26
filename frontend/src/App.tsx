@@ -126,10 +126,10 @@ function App() {
                 <button className="px-3 py-1.5 bg-primary text-white text-sm font-medium rounded-md">
                   All traffic
                 </button>
-                <button className="px-3 py-1.5 text-black text-sm font-medium hover:text-text transition-colors">
+                <button className="px-3 py-1.5 text-black text-sm font-medium hover:text-black transition-colors">
                   Traffic flow
                 </button>
-                <button className="px-3 py-1.5 text-black text-sm font-medium hover:text-text transition-colors">
+                <button className="px-3 py-1.5 text-black text-sm font-medium hover:text-black transition-colors">
                   Traffic incidents
                 </button>
               </div>
