@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { PlusIcon, MinusIcon } from '@heroicons/react/24/outline'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 import Header from './components/Header'
 import MapComponent from './components/MapComponent'
 import ModalWizard from './components/ModalWizard'
@@ -21,29 +23,6 @@ function App() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [focusedReportId, setFocusedReportId] = useState<string | null>(null)
-  const [showFeed, setShowFeed] = useState(true)
-
-  // Add scroll-triggered animations
-  useEffect(() => {
-    const observerOptions = {
-      threshold: 0.1,
-      rootMargin: '0px 0px -50px 0px'
-    }
-
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('animate-[slideUp_0.6s_ease-out]')
-        }
-      })
-    }, observerOptions)
-
-    // Observe all elements that should animate on scroll
-    const elements = document.querySelectorAll('.animate-on-scroll')
-    elements.forEach(el => observer.observe(el))
-
-    return () => observer.disconnect()
-  }, [])
 
   const handleMapClick = (lat: number, lng: number) => {
     setSelectedLocation({ lat, lng })
@@ -60,7 +39,7 @@ function App() {
         image,
         timestamp: new Date()
       }
-      setReports(prev => [newReport, ...prev]) // Add to beginning for feed
+      setReports(prev => [newReport, ...prev])
       setIsModalOpen(false)
       setSelectedLocation(null)
     }
@@ -75,143 +54,83 @@ function App() {
     setFocusedReportId(reportId)
   }
 
-  const handleReportClick = () => {
-    // For mobile, we'll use the FAB. For desktop, this is handled by the header button
-    if (window.innerWidth >= 768) {
-      // On desktop, we need a location first, so this would typically be disabled
-      // or we could open a location picker
-      console.log('Desktop report button clicked')
-    }
-  }
-
   return (
-    <div className="min-h-screen bg-background text-text">
-                   <Header
-               onReportClick={handleReportClick}
-               onToggleFeed={() => setShowFeed(!showFeed)}
-               showFeed={showFeed}
-             />
+    <div className="min-h-screen bg-background text-text overflow-x-hidden">
+      {/* Header */}
+      <Header onReportClick={() => console.log('Desktop report clicked')} />
 
-             {/* Title Section */}
-             <div className="pt-20 pb-4 bg-white border-b border-border">
-               <div className="max-w-7xl mx-auto px-4 md:px-6">
-                 <div className="text-center">
-                   <h1 className="text-3xl md:text-4xl font-bold text-black mb-2">Bengaluru traffic</h1>
-                   <div className="flex items-center justify-center gap-2">
-                     <span className="text-2xl">🇮🇳</span>
-                     <span className="text-black">India</span>
-                   </div>
-                 </div>
-               </div>
-             </div>
-
-             {/* Main Content */}
-             <div className="flex h-screen bg-white"> {/* pt-24 to account for fixed header + title */}
-        {/* Map Section */}
-        <motion.div 
-          className="flex-1 relative"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6 }}
-        >
-          {/* Map Controls Overlay */}
-          <div className="absolute top-4 left-4 z-10">
-            <motion.div 
-              className="bg-white rounded-lg shadow-card p-3 border border-border"
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              <div className="flex items-center gap-2">
-                <button className="px-3 py-1.5 bg-primary text-white text-sm font-medium rounded-md">
-                  All traffic
-                </button>
-                <button className="px-3 py-1.5 text-black text-sm font-medium hover:text-black transition-colors">
-                  Traffic flow
-                </button>
-                <button className="px-3 py-1.5 text-black text-sm font-medium hover:text-black transition-colors">
-                  Traffic incidents
-                </button>
-              </div>
-            </motion.div>
+      {/* Hero/Intro Section */}
+      <section className="bg-gradient-to-r from-blue-50 to-indigo-50 py-10 border-b">
+        <div className="max-w-7xl mx-auto px-6 mt-32 text-center">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent mb-2">
+            Bengaluru Traffic
+          </h1>
+          <div className="flex justify-center items-center gap-2 text-gray-600 text-lg font-medium">
+            <span>🇮🇳</span>
+            <span>India</span>
           </div>
+          <p className="text-gray-500 mt-2 font-medium text-sm">
+            Real-time traffic monitoring and civic issue reporting
+          </p>
+        </div>
+      </section>
 
-          {/* Zoom Controls */}
-          <div className="absolute top-4 right-4 z-10">
-            <motion.div 
-              className="bg-white rounded-lg shadow-card border border-border"
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-            >
+      {/* Map Section */}
+      <section className="relative h-[100vh] w-full">
+        <MapComponent
+          reports={reports}
+          onMapClick={handleMapClick}
+          focusedReportId={focusedReportId || undefined}
+        />
+
+        {/* Map Controls */}
+        <div className="absolute top-6 left-6 z-10">
+          <Card className="p-4 bg-white/90 backdrop-blur-lg shadow-xl border-0">
+            <CardContent className="p-0">
+              <div className="flex gap-2">
+                <Button size="sm" className="bg-primary text-white font-semibold">All traffic</Button>
+                <Button size="sm" variant="ghost">Flow</Button>
+                <Button size="sm" variant="ghost">Incidents</Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Zoom Controls */}
+        <div className="absolute top-6 right-6 z-10">
+          <Card className="bg-white/90 backdrop-blur-lg shadow-xl border-0">
+            <CardContent className="p-0">
               <div className="flex flex-col">
-                <button className="p-2 hover:bg-neutral-light transition-colors border-b border-border">
-                  <PlusIcon className="w-4 h-4 text-black" />
-                </button>
-                <button className="p-2 hover:bg-neutral-light transition-colors">
-                  <MinusIcon className="w-4 h-4 text-black" />
-                </button>
+                <Button variant="ghost" size="icon" className="rounded-none border-b hover:bg-gray-100">
+                  <PlusIcon className="w-5 h-5" />
+                </Button>
+                <Button variant="ghost" size="icon" className="rounded-none hover:bg-gray-100">
+                  <MinusIcon className="w-5 h-5" />
+                </Button>
               </div>
-            </motion.div>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* Feed Section */}
+      <section className="w-full px-6 py-12 bg-white border-t">
+        <div className="max-w-5xl mx-auto">
+          <div className="flex items-center justify-between mb-4">
+            <Feed reports={reports} onFocusReport={handleFocusReport} />
           </div>
 
-          <MapComponent 
-            reports={reports} 
-            onMapClick={handleMapClick}
-            focusedReportId={focusedReportId || undefined}
-          />
-        </motion.div>
+          
+        </div>
+      </section>
 
-        {/* Feed Section - Desktop */}
-        <AnimatePresence>
-          {showFeed && (
-            <motion.div
-              initial={{ x: 400, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: 400, opacity: 0 }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="hidden md:block"
-            >
-              <Feed 
-                reports={reports} 
-                onFocusReport={handleFocusReport}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Feed Section - Mobile (Slide up panel) */}
-        <AnimatePresence>
-          {showFeed && (
-            <motion.div
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white rounded-t-2xl shadow-2xl max-h-[60vh]"
-            >
-              <div className="p-4">
-                <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-4" />
-                <Feed 
-                  reports={reports} 
-                  onFocusReport={handleFocusReport}
-                />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* Floating Action Button */}
-      <FAB 
-        onClick={() => {
-          // For mobile, we'll need to get user's location or let them click on map
-          console.log('FAB clicked - need to implement location selection')
-        }}
+      {/* FAB */}
+      <FAB
+        onClick={() => console.log('FAB clicked')}
         show={!isModalOpen}
       />
 
-      {/* Modal Wizard */}
+      {/* Modal */}
       <AnimatePresence>
         {isModalOpen && selectedLocation && (
           <ModalWizard

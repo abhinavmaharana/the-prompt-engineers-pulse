@@ -30,6 +30,10 @@ const MapComponent = ({ reports, onMapClick, focusedReportId }: MapComponentProp
           const map = new google.maps.Map(mapRef.current, {
             center: { lat: 12.9716, lng: 77.5946 },
             zoom: 13,
+            mapTypeId: google.maps.MapTypeId.ROADMAP,
+            mapTypeControl: false,
+            streetViewControl: false,
+            fullscreenControl: false,
             styles: [
               { featureType: 'all', elementType: 'geometry.fill', stylers: [{ color: '#f5f5f5' }] },
               { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#e3f2fd' }] },
@@ -141,18 +145,21 @@ const MapComponent = ({ reports, onMapClick, focusedReportId }: MapComponentProp
   }, [focusedReportId, reports])
 
   return (
-    <div className="h-[calc(100vh-80px)] relative">
+    <div className="h-screen relative w-full">
       {isLoading && (
-        <div className="absolute inset-0 bg-background-secondary flex items-center justify-center z-10">
-          <div className="flex flex-col items-center space-y-4">
-            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-sm text-text-secondary font-medium">Loading map...</p>
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center z-10 backdrop-blur-sm">
+          <div className="flex flex-col items-center space-y-6">
+            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin shadow-lg"></div>
+            <div className="text-center">
+              <p className="text-lg font-bold text-gray-800 mb-2">Loading Map</p>
+              <p className="text-sm text-gray-600">Preparing Bengaluru traffic view...</p>
+            </div>
           </div>
         </div>
       )}
       <div 
         ref={mapRef} 
-        className={`w-full h-full transition-opacity duration-500 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+        className={`w-full h-full transition-all duration-700 ${isLoading ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}
       />
     </div>
   )

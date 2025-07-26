@@ -117,10 +117,10 @@ const ModalWizard = ({ latitude, longitude, onSubmit, onClose }: ModalWizardProp
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
         transition={{ type: "spring", damping: 25, stiffness: 300 }}
-        className="bg-white rounded-2xl shadow-elevated w-full max-w-md max-h-[90vh] overflow-hidden border border-border/50"
+                  className="bg-white rounded-2xl shadow-elevated w-full max-w-md max-h-[90vh] overflow-hidden border"
       >
         {/* Header */}
-        <div className="p-6 border-b border-border/50">
+                    <div className="p-6 border-b">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-lg font-semibold text-black">Report Issue</h2>
@@ -183,7 +183,7 @@ const ModalWizard = ({ latitude, longitude, onSubmit, onClose }: ModalWizardProp
                     <h3 className="text-base font-medium text-black mb-2">Location Confirmed</h3>
                     <p className="text-sm text-black">We've captured the location where you clicked.</p>
                   </div>
-                  <div className="bg-neutral-light rounded-lg p-4 border border-border/50">
+                  <div className="bg-neutral-light rounded-lg p-4 border">
                     <div className="text-xs font-medium text-black mb-2">📍 Coordinates</div>
                     <div className="font-mono text-sm text-black bg-white rounded-lg p-3 shadow-soft">
                       {latitude.toFixed(6)}, {longitude.toFixed(6)}
@@ -207,7 +207,7 @@ const ModalWizard = ({ latitude, longitude, onSubmit, onClose }: ModalWizardProp
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
                       placeholder="e.g., Large pothole causing traffic, broken street light..."
-                      className="w-full p-3 border text-black border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent resize-none bg-white shadow-soft"
+                                             className="w-full p-3 border text-black rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent resize-none bg-white shadow-soft"
                       rows={3}
                     />
                   </div>
@@ -227,7 +227,7 @@ const ModalWizard = ({ latitude, longitude, onSubmit, onClose }: ModalWizardProp
                   <motion.div
                     whileHover={{ scale: 1.02 }}
                     className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors bg-white shadow-soft ${
-                      isDragOver ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+                                             isDragOver ? 'border-primary bg-primary/5' : 'border hover:border-primary/50'
                     }`}
                     onDragOver={handleDragOver}
                     onDragLeave={handleDragLeave}
@@ -287,18 +287,18 @@ const ModalWizard = ({ latitude, longitude, onSubmit, onClose }: ModalWizardProp
                   </div>
                   
                   <div className="space-y-3">
-                    <div className="bg-neutral-light rounded-lg p-4 border border-border/50">
+                    <div className="bg-neutral-light rounded-lg p-4 border">
                       <div className="text-xs font-medium text-black mb-2">📝 Description</div>
                       <div className="text-black bg-white rounded-lg p-3 shadow-soft text-sm">{description}</div>
                     </div>
                     
-                    <div className="bg-neutral-light rounded-lg p-4 border border-border/50">
+                    <div className="bg-neutral-light rounded-lg p-4 border">
                       <div className="text-xs font-medium text-black mb-2">📍 Location</div>
                       <div className="font-mono text-black bg-white rounded-lg p-3 shadow-soft text-sm">{latitude.toFixed(6)}, {longitude.toFixed(6)}</div>
                     </div>
                     
                     {imagePreview && (
-                      <div className="bg-neutral-light rounded-lg p-4 border border-border/50">
+                      <div className="bg-neutral-light rounded-lg p-4 border">
                         <div className="text-xs font-medium text-black mb-2">📸 Photo</div>
                         <img
                           src={imagePreview}
@@ -315,7 +315,7 @@ const ModalWizard = ({ latitude, longitude, onSubmit, onClose }: ModalWizardProp
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-border/50 flex justify-between">
+        <div className="p-6 border-t flex justify-between">
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}

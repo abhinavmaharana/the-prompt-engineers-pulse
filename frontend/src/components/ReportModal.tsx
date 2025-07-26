@@ -41,7 +41,7 @@ const ReportModal = ({ latitude, longitude, onSubmit, onClose }: ReportModalProp
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 modal-backdrop">
-      <div className="bg-background border border-border rounded-xl p-6 w-full max-w-md shadow-large modal-enter">
+              <div className="bg-background border rounded-xl p-6 w-full max-w-md shadow-large modal-enter">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-semibold text-primary">Report Civic Issue</h2>
           <button
@@ -59,7 +59,7 @@ const ReportModal = ({ latitude, longitude, onSubmit, onClose }: ReportModalProp
             <label className="block text-sm font-medium text-text-secondary mb-2">
               Location Coordinates
             </label>
-            <div className="bg-background-secondary border border-border rounded-lg px-3 py-2 text-sm text-text">
+            <div className="bg-background-secondary border rounded-lg px-3 py-2 text-sm text-text">
               {latitude.toFixed(6)}, {longitude.toFixed(6)}
             </div>
           </div>
@@ -73,7 +73,7 @@ const ReportModal = ({ latitude, longitude, onSubmit, onClose }: ReportModalProp
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Describe the civic issue (e.g., 'Large pothole causing traffic')"
-              className="w-full bg-background border border-border rounded-lg px-3 py-2 text-text placeholder-text-muted focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary focus:ring-opacity-20 resize-none transition-all"
+                              className="w-full bg-background border rounded-lg px-3 py-2 text-text placeholder-text-muted focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary focus:ring-opacity-20 resize-none transition-all"
               rows={3}
               required
             />
@@ -94,7 +94,7 @@ const ReportModal = ({ latitude, longitude, onSubmit, onClose }: ReportModalProp
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="w-full bg-background border border-border rounded-lg px-3 py-2 text-text-secondary hover:border-primary hover:bg-background-secondary transition-all duration-200 hover:shadow-soft active:scale-95"
+                className="w-full bg-background border rounded-lg px-3 py-2 text-text-secondary hover:border-primary hover:bg-background-secondary transition-all duration-200 hover:shadow-soft active:scale-95"
               >
                 {selectedImage ? selectedImage.name : 'Choose Image'}
               </button>
@@ -103,7 +103,7 @@ const ReportModal = ({ latitude, longitude, onSubmit, onClose }: ReportModalProp
                   <img
                     src={imagePreview}
                     alt="Preview"
-                    className="w-full h-32 object-cover rounded-lg border border-border"
+                    className="w-full h-32 object-cover rounded-lg border"
                   />
                 </div>
               )}
