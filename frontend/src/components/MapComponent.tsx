@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Loader } from '@googlemaps/js-api-loader'
 import type { Report } from '../App'
-import { getMoodColor, getMoodEmoji } from '../utils/sentimentAnalysis'
+import { getMoodColor, getMoodEmoji, analyzeMoodTrends } from '../utils/sentimentAnalysis'
 
 interface MapComponentProps {
   reports: Report[]
@@ -260,8 +260,8 @@ const MapComponent = ({ reports, onMapClick, focusedReportId, trafficView, moodF
       try {
                 console.log('Creating marker for:', report.description, 'at:', report.latitude, report.longitude)
 
-        // Create custom colored marker
-                        const markerColor = getMarkerColor(trafficView, report)
+                // Create custom colored marker with mood enhancement
+        const markerColor = getMarkerColor(trafficView, report)
         const marker = new googleRef.current!.maps.Marker({
           position: { lat: report.latitude, lng: report.longitude },
           map: mapInstanceRef.current,
@@ -269,11 +269,11 @@ const MapComponent = ({ reports, onMapClick, focusedReportId, trafficView, moodF
           animation: googleRef.current!.maps.Animation.DROP,
           icon: {
             path: googleRef.current!.maps.SymbolPath.CIRCLE,
-            scale: 8,
+            scale: report.sentiment ? (report.sentiment.confidence > 0.7 ? 12 : 10) : 8, // Size based on confidence
             fillColor: markerColor,
-            fillOpacity: 1,
+            fillOpacity: report.sentiment ? Math.max(0.7, report.sentiment.confidence) : 1, // Opacity based on confidence
             strokeColor: '#FFFFFF',
-            strokeWeight: 2
+            strokeWeight: report.sentiment ? 3 : 2 // Thicker border for mood reports
           }
         })
 
@@ -494,6 +494,55 @@ const MapComponent = ({ reports, onMapClick, focusedReportId, trafficView, moodF
         ref={mapRef} 
         className={`w-full h-full transition-all duration-700 ${isLoading ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}
       />
+      
+      {/* Mood Legend */}
+      <div className="absolute bottom-4 right-4 z-10 bg-white/90 backdrop-blur-sm rounded-lg p-3 shadow-lg border border-gray-200">
+        <div className="text-xs font-semibold text-gray-700 mb-2">🎭 Mood Colors</div>
+        <div className="space-y-1 text-xs">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+            <span>😊 Happy/Satisfied</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-gray-500 rounded-full"></div>
+            <span>😐 Neutral</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-amber-500 rounded-full"></div>
+            <span>😟 Concerned</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+            <span>😤 Frustrated/Angry</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Mood Summary Overlay */}
+      {reports.length > 0 && (
+        <div className="absolute bottom-44 left-6 z-10 bg-white/90 backdrop-blur-sm rounded-lg p-3 shadow-lg border border-gray-200">
+          <div className="text-xs font-semibold text-gray-700 mb-2">📊 Current Moods</div>
+          <div className="space-y-1 text-xs">
+            {(() => {
+              const moodTrends = analyzeMoodTrends(reports.map(r => ({ description: r.description, timestamp: r.timestamp })))
+              const topMoods = Object.entries(moodTrends.moodCounts)
+                .filter(([_, count]) => count > 0)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 3)
+              
+              return topMoods.map(([mood, count]) => (
+                <div key={mood} className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span>{getMoodEmoji(mood)}</span>
+                    <span className="capitalize">{mood}</span>
+                  </div>
+                  <span className="font-semibold text-gray-800">{count}</span>
+                </div>
+              ))
+            })()}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
