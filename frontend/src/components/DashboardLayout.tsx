@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import MapDashboard from './MapDashboard';
 import EventFeed from './EventFeed';
 import ReportUploader from './ReportUploader';
+import GeminiAICards from './GeminiAICards';
+import PredictiveAlertsPanel from './PredictiveAlertsPanel';
 
 interface FilterState {
   categories: string[];
@@ -88,18 +90,43 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ activeSection }) => {
 
   if (activeSection === 'alerts') {
     return (
-      <div className="flex-1 relative">
-        <MapDashboard />
-        <div className="absolute top-4 right-4 z-40">
-          <button
-            onClick={() => setShowAlertsPanel(!showAlertsPanel)}
-            className="btn-primary flex items-center space-x-2"
-          >
-            <span>🤖</span>
-            <span>AI Alerts</span>
-          </button>
+      <div className="flex-1 flex flex-col">
+        {/* Alerts Section Header */}
+        <div className="bg-[var(--bg-tertiary)] border-b border-[var(--border-light)] px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--accent-violet)] to-[var(--accent-blue)] flex items-center justify-center">
+                <span className="text-white text-lg">🤖</span>
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-[var(--text-primary)]">AI Intelligence Center</h1>
+                <p className="text-[var(--text-secondary)]">Powered by Gemini AI • Real-time predictions and insights</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowAlertsPanel(true)}
+              className="px-4 py-2 bg-gradient-to-r from-[var(--accent-coral)] to-[var(--status-error)] text-white rounded-xl font-medium hover:shadow-lg transition-all duration-200 flex items-center space-x-2"
+            >
+              <span>🔮</span>
+              <span>Predictive Alerts</span>
+            </button>
+          </div>
         </div>
-        {showAlertsPanel && <AIAlertsPanel onClose={() => setShowAlertsPanel(false)} />}
+
+        {/* AI Content */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="max-w-4xl mx-auto p-6">
+            <GeminiAICards maxCards={8} showFilters={true} />
+          </div>
+        </div>
+
+        {/* Predictive Alerts Panel */}
+        <PredictiveAlertsPanel 
+          isOpen={showAlertsPanel} 
+          onClose={() => setShowAlertsPanel(false)}
+          position="right"
+        />
+        
         <ReportUploader />
       </div>
     );
@@ -184,6 +211,15 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ activeSection }) => {
               <span>🎭</span>
               <span>Mood Map</span>
             </button>
+
+            {/* AI Insights Quick Access */}
+            <button
+              onClick={() => setShowAlertsPanel(true)}
+              className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 flex items-center gap-1.5 bg-gradient-to-r from-[var(--accent-violet)] to-[var(--accent-blue)] text-white shadow-md hover:shadow-lg"
+            >
+              <span>🤖</span>
+              <span>AI Alerts</span>
+            </button>
           </div>
         </div>
       </div>
@@ -204,89 +240,15 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ activeSection }) => {
         </div>
       </div>
 
+      {/* Predictive Alerts Panel */}
+      <PredictiveAlertsPanel 
+        isOpen={showAlertsPanel} 
+        onClose={() => setShowAlertsPanel(false)}
+        position="right"
+      />
+
       {/* Floating Report Button */}
       <ReportUploader />
-    </div>
-  );
-};
-
-// AI Alerts Panel Component
-const AIAlertsPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
-  const alerts = [
-    {
-      id: 1,
-      type: 'prediction',
-      title: 'Traffic Surge Predicted',
-      description: 'High traffic expected on Outer Ring Road due to cricket match at Chinnaswamy Stadium',
-      confidence: 87,
-      timeframe: 'Next 2 hours',
-      severity: 'medium',
-    },
-    {
-      id: 2,
-      type: 'weather',
-      title: 'Rain Alert',
-      description: 'Heavy rainfall predicted in Electronic City area. Waterlogging likely.',
-      confidence: 94,
-      timeframe: 'Next 1 hour',
-      severity: 'high',
-    },
-    {
-      id: 3,
-      type: 'event',
-      title: 'Mass Transit Disruption',
-      description: 'Namma Metro Blue Line experiencing delays due to technical issues',
-      confidence: 100,
-      timeframe: 'Current',
-      severity: 'high',
-    },
-  ];
-
-  return (
-    <div className="absolute top-0 right-0 w-80 h-full bg-[var(--bg-tertiary)] border-l border-[var(--border-light)] shadow-xl slide-up-enter z-30">
-      <div className="p-4 border-b border-[var(--border-light)] flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <span className="text-lg">🤖</span>
-          <h3 className="font-semibold text-[var(--text-primary)]">AI Alerts</h3>
-        </div>
-        <button
-          onClick={onClose}
-          className="p-1 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-
-      <div className="p-4 space-y-4 overflow-y-auto">
-        {alerts.map((alert) => (
-          <div key={alert.id} className="card p-4 hover:shadow-md">
-            <div className="flex items-start justify-between mb-2">
-              <div className="flex items-center space-x-2">
-                <div className={`w-2 h-2 rounded-full ${
-                  alert.severity === 'high' ? 'bg-[var(--status-error)]' :
-                  alert.severity === 'medium' ? 'bg-[var(--status-warning)]' :
-                  'bg-[var(--status-success)]'
-                }`}></div>
-                <h4 className="font-semibold text-sm text-[var(--text-primary)]">{alert.title}</h4>
-              </div>
-              <span className="text-xs text-[var(--text-tertiary)] bg-[var(--bg-secondary)] px-2 py-1 rounded">
-                {alert.confidence}% confidence
-              </span>
-            </div>
-            
-            <p className="text-sm text-[var(--text-secondary)] mb-3">
-              {alert.description}
-            </p>
-            
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-[var(--text-tertiary)]">{alert.timeframe}</span>
-              <span className="text-[var(--accent-violet)] font-medium">Gemini AI</span>
-            </div>
-          </div>
-        ))}
-      </div>
     </div>
   );
 };
