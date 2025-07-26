@@ -8,8 +8,7 @@ interface MapComponentProps {
   onMapClick: (lat: number, lng: number) => void
   focusedReportId?: string
   trafficView: 'all' | 'flow' | 'incidents'
-  moodFilter: 'all' | 'positive' | 'negative' | 'frustrated' | 'concerned' | 'satisfied' | 'neutral'
-  route?: { origin: string; destination: string; routeType?: string; transportMode?: string } | null
+  route?: { origin: string; destination: string; routeType?: string } | null
   onMapReady?: (map: google.maps.Map) => void
 }
 
@@ -61,28 +60,6 @@ const MapComponent = ({ reports, onMapClick, focusedReportId, trafficView, moodF
       case 'all':
       default:
         return '#3B82F6' // blue for all traffic view
-    }
-  }
-
-  // Function to get Google Maps travel mode from transport mode string
-  const getTravelMode = (transportMode: string): google.maps.TravelMode => {
-    if (!googleRef.current) {
-      console.warn('Google Maps API not loaded yet, defaulting to DRIVING')
-      return google.maps.TravelMode.DRIVING
-    }
-    
-    console.log('Setting travel mode to:', transportMode)
-    
-    switch (transportMode) {
-      case 'walking':
-        return googleRef.current.maps.TravelMode.WALKING
-      case 'bicycling':
-        return googleRef.current.maps.TravelMode.BICYCLING
-      case 'transit':
-        return googleRef.current.maps.TravelMode.TRANSIT
-      case 'driving':
-      default:
-        return googleRef.current.maps.TravelMode.DRIVING
     }
   }
 
@@ -386,29 +363,24 @@ const MapComponent = ({ reports, onMapClick, focusedReportId, trafficView, moodF
          }
 
          console.log('Drawing route:', route)
-         console.log('Transport mode:', route.transportMode)
 
          const directionsService = new googleRef.current.maps.DirectionsService()
          
-         // Configure route options based on route type and transport mode
+         // Configure route options based on route type
          const routeOptions: google.maps.DirectionsRequest = {
            origin: route.origin,
            destination: route.destination,
-           travelMode: getTravelMode(route.transportMode || 'driving'),
+           travelMode: googleRef.current.maps.TravelMode.DRIVING,
          }
-         
-         console.log('Route options:', routeOptions)
 
-         // Add route type specific options (only for driving mode)
-         if (route.transportMode === 'driving' || !route.transportMode) {
-           if (route.routeType === 'shortest') {
-             routeOptions.optimizeWaypoints = true
-           } else if (route.routeType === 'avoidTolls') {
-             routeOptions.avoidHighways = false
-             routeOptions.avoidTolls = true
-           }
-           // 'fastest' is the default behavior
+         // Add route type specific options
+         if (route.routeType === 'shortest') {
+           routeOptions.optimizeWaypoints = true
+         } else if (route.routeType === 'avoidTolls') {
+           routeOptions.avoidHighways = false
+           routeOptions.avoidTolls = true
          }
+         // 'fastest' is the default behavior
 
          directionsService.route(routeOptions,
            (result, status) => {

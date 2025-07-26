@@ -91,7 +91,7 @@ function App() {
   const [trafficView, setTrafficView] = useState<'all' | 'flow' | 'incidents'>('all')
   const [moodFilter, setMoodFilter] = useState<'all' | 'positive' | 'negative' | 'frustrated' | 'concerned' | 'satisfied' | 'neutral'>('all')
 
-  const [route, setRoute] = useState<{ origin: string; destination: string; routeType?: string; transportMode?: string } | null>(null)
+  const [route, setRoute] = useState<{ origin: string; destination: string; routeType?: string } | null>(null)
   const mapRef = useRef<google.maps.Map | null>(null)
 
   const handleMapClick = (lat: number, lng: number) => {
@@ -128,23 +128,14 @@ function App() {
     setFocusedReportId(reportId)
   }
 
-  const handleRouteSelect = (origin: string, destination: string, routeType: string, transportMode: string) => {
-    console.log('Route selected:', { origin, destination, routeType, transportMode })
-    setRoute({ origin, destination, routeType, transportMode })
+  const handleRouteSelect = (origin: string, destination: string, routeType: string) => {
+    console.log('Route selected:', { origin, destination, routeType })
+    setRoute({ origin, destination, routeType })
     // Here you would integrate with Google Directions API to draw the route on map
     // The routeType parameter can be used to configure the route calculation:
     // - 'fastest': Optimize for time
     // - 'shortest': Optimize for distance
     // - 'avoidTolls': Avoid toll roads
-    // The transportMode parameter can be used to set the travel mode:
-    // - 'driving': Car route
-    // - 'walking': Walking route
-    // - 'bicycling': Cycling route
-    // - 'transit': Public transit route
-  }
-
-  const handleMoodFilterChange = (mood: 'all' | 'positive' | 'negative' | 'frustrated' | 'concerned' | 'satisfied' | 'neutral') => {
-    setMoodFilter(mood)
   }
 
   const handleMapReady = (map: google.maps.Map) => {
@@ -196,12 +187,6 @@ function App() {
                  </p>
                </div>
              </section>
-
-             {/* Route Planner Section */}
-             <RoutePlannerSection
-               onRouteSelect={handleRouteSelect}
-               route={route}
-             />
 
              {/* Map Section */}
       <section className="relative px-6 py-8">
@@ -417,49 +402,11 @@ function App() {
          )}
       </section>
 
-                   {/* Mood Analytics Section */}
-                   <section className="px-6 py-8">
-                     <div className="max-w-7xl mx-auto">
-                       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                         <div className="lg:col-span-2">
-                           <MoodAnalytics reports={reports} />
-                         </div>
-                         <div className="lg:col-span-1">
-                           <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg border-0">
-                             <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                               <span>📊</span>
-                               Quick Stats
-                             </h3>
-                             <div className="space-y-3">
-                               <div className="flex justify-between items-center">
-                                 <span className="text-sm text-gray-600">Total Reports</span>
-                                 <span className="font-semibold text-gray-800">{reports.length}</span>
-                               </div>
-                               <div className="flex justify-between items-center">
-                                 <span className="text-sm text-gray-800">Today's Reports</span>
-                                 <span className="font-semibold text-gray-800">
-                                   {reports.filter(r => {
-                                     const today = new Date()
-                                     const reportDate = new Date(r.timestamp)
-                                     return today.toDateString() === reportDate.toDateString()
-                                   }).length}
-                                 </span>
-                               </div>
-                               <div className="flex justify-between items-center">
-                                 <span className="text-sm text-gray-600">Avg. Sentiment</span>
-                                 <span className="font-semibold text-gray-800">
-                                   {reports.length > 0 ? 
-                                     (reports.reduce((sum, r) => sum + (r.sentiment?.score || 0), 0) / reports.length).toFixed(2) : 
-                                     '0.00'
-                                   }
-                                 </span>
-                               </div>
-                             </div>
-                           </div>
-                         </div>
-                       </div>
-                     </div>
-                   </section>
+             {/* Route Planner Section */}
+             <RoutePlannerSection
+               onRouteSelect={handleRouteSelect}
+               route={route}
+             />
 
                    {/* Live Traffic Section */}
                    <section className="w-full px-6 py-8 relative">
