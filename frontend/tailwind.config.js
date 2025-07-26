@@ -13,6 +13,10 @@ export default {
   			'background-tertiary': '#F1F5F9',
   			'background-card': '#FFFFFF',
   			'background-overlay': 'rgba(0, 0, 0, 0.5)',
+  			'glass': 'rgba(255, 255, 255, 0.1)',
+  			'glass-dark': 'rgba(0, 0, 0, 0.1)',
+  			'mirror': 'rgba(255, 255, 255, 0.25)',
+  			'mirror-dark': 'rgba(0, 0, 0, 0.25)',
   			primary: {
   				DEFAULT: 'hsl(var(--primary))',
   				foreground: 'hsl(var(--primary-foreground))'
@@ -106,7 +110,11 @@ export default {
   			'card-hover': '0 4px 6px rgba(0, 0, 0, 0.07)',
   			elevated: '0 20px 25px rgba(0, 0, 0, 0.1)',
   			floating: '0 25px 50px rgba(0, 0, 0, 0.15)',
-  			inner: 'inset 0 2px 4px rgba(0, 0, 0, 0.06)'
+  			inner: 'inset 0 2px 4px rgba(0, 0, 0, 0.06)',
+  			'glass': '0 8px 32px rgba(31, 38, 135, 0.37)',
+  			'mirror': '0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+  			'glass-light': '0 8px 32px rgba(255, 255, 255, 0.3)',
+  			'glass-dark': '0 8px 32px rgba(0, 0, 0, 0.3)'
   		},
   		animation: {
   			'fade-in': 'fadeIn 0.6s ease-out',

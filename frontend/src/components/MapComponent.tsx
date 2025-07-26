@@ -7,15 +7,53 @@ interface MapComponentProps {
   onMapClick: (lat: number, lng: number) => void
   focusedReportId?: string
   trafficView: 'all' | 'flow' | 'incidents'
+  route?: { origin: string; destination: string } | null
+  onMapReady?: (map: google.maps.Map) => void
 }
 
-const MapComponent = ({ reports, onMapClick, focusedReportId, trafficView }: MapComponentProps) => {
+const MapComponent = ({ reports, onMapClick, focusedReportId, trafficView, route, onMapReady }: MapComponentProps) => {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<google.maps.Map | null>(null)
   const googleRef = useRef<typeof google | null>(null)
   const markersRef = useRef<google.maps.Marker[]>([])
   const infoWindowsRef = useRef<google.maps.InfoWindow[]>([])
+  const directionsRendererRef = useRef<google.maps.DirectionsRenderer | null>(null)
+  const trafficLayerRef = useRef<google.maps.TrafficLayer | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+
+  // Function to get marker color based on traffic view and report content
+  const getMarkerColor = (trafficView: string, description: string): string => {
+    const desc = description.toLowerCase()
+    
+    if (trafficView === 'flow') {
+      if (desc.includes('congestion')) return '#f97316' // orange-500
+      if (desc.includes('slow')) return '#eab308' // yellow-500
+      if (desc.includes('jam')) return '#ef4444' // red-500
+      if (desc.includes('construction')) return '#3b82f6' // blue-500
+      return '#f97316' // default orange for flow
+    }
+    
+    if (trafficView === 'incidents') {
+      if (desc.includes('accident')) return '#991b1b' // red-800
+      if (desc.includes('blocking')) return '#9333ea' // purple-600
+      return '#dc2626' // default red-600 for incidents
+    }
+    
+    return '#dc2626' // default red for all traffic
+  }
+
+  // Function to get route color based on traffic view and conditions
+  const getRouteColor = (trafficView: string): string => {
+    switch (trafficView) {
+      case 'flow':
+        return '#f97316' // orange for flow view
+      case 'incidents':
+        return '#dc2626' // red for incidents view
+      case 'all':
+      default:
+        return '#3B82F6' // blue for all traffic view
+    }
+  }
 
   useEffect(() => {
     // Prevent multiple initializations
@@ -90,13 +128,32 @@ const MapComponent = ({ reports, onMapClick, focusedReportId, trafficView }: Map
 
           mapInstanceRef.current = map
 
+          // Initialize Traffic Layer
+          const trafficLayer = new google.maps.TrafficLayer()
+          trafficLayerRef.current = trafficLayer
+
+          // Call onMapReady callback if provided
+          if (onMapReady) {
+            onMapReady(map)
+          }
+
+          // Initialize Directions Renderer
+          const directionsRenderer = new google.maps.DirectionsRenderer({
+            map: map,
+            suppressMarkers: true, // We'll add our own markers
+            polylineOptions: {
+              strokeColor: getRouteColor(trafficView),
+              strokeWeight: 4,
+              strokeOpacity: 0.8
+            }
+          })
+          directionsRendererRef.current = directionsRenderer
+
           map.addListener('click', (event: google.maps.MapMouseEvent) => {
             if (event.latLng) {
               onMapClick(event.latLng.lat(), event.latLng.lng())
             }
           })
-
-
 
           map.addListener('tilesloaded', () => setIsLoading(false))
         }
@@ -165,12 +222,21 @@ const MapComponent = ({ reports, onMapClick, focusedReportId, trafficView }: Map
       try {
                 console.log('Creating marker for:', report.description, 'at:', report.latitude, report.longitude)
 
-        // Try a simple approach first - use default marker
+        // Create custom colored marker
+        const markerColor = getMarkerColor(trafficView, report.description)
         const marker = new googleRef.current!.maps.Marker({
           position: { lat: report.latitude, lng: report.longitude },
           map: mapInstanceRef.current,
           title: report.description,
-          animation: googleRef.current!.maps.Animation.DROP
+          animation: googleRef.current!.maps.Animation.DROP,
+          icon: {
+            path: googleRef.current!.maps.SymbolPath.CIRCLE,
+            scale: 8,
+            fillColor: markerColor,
+            fillOpacity: 1,
+            strokeColor: '#FFFFFF',
+            strokeWeight: 2
+          }
         })
 
         console.log('Marker created successfully:', marker)
@@ -240,8 +306,101 @@ const MapComponent = ({ reports, onMapClick, focusedReportId, trafficView }: Map
           console.log('Forced map to center and zoom for better marker visibility')
         }, 500)
       }
-    }, 100)
-  }, [reports, trafficView])
+             }, 100)
+       }, [reports, trafficView])
+
+  // Control traffic layer visibility
+  useEffect(() => {
+    if (!trafficLayerRef.current || !mapInstanceRef.current) return
+
+    // Show traffic layer for all views
+    trafficLayerRef.current.setMap(mapInstanceRef.current)
+  }, [trafficView])
+
+  // Update route color when traffic view changes
+  useEffect(() => {
+    if (!directionsRendererRef.current || !route) return
+
+    // Update the polyline options with new color
+    directionsRendererRef.current.setOptions({
+      polylineOptions: {
+        strokeColor: getRouteColor(trafficView),
+        strokeWeight: 4,
+        strokeOpacity: 0.8
+      }
+    })
+  }, [trafficView, route])
+
+       // Handle route drawing
+       useEffect(() => {
+         if (!mapInstanceRef.current || !googleRef.current || !route) {
+           // Clear any existing route
+           if (directionsRendererRef.current) {
+             directionsRendererRef.current.setDirections({ routes: [], request: {} as any })
+           }
+           return
+         }
+
+         console.log('Drawing route:', route)
+
+         const directionsService = new googleRef.current.maps.DirectionsService()
+         
+         directionsService.route(
+           {
+             origin: route.origin,
+             destination: route.destination,
+             travelMode: googleRef.current.maps.TravelMode.DRIVING,
+           },
+           (result, status) => {
+             if (status === 'OK' && result) {
+               console.log('Route calculated successfully:', result)
+               directionsRendererRef.current?.setDirections(result)
+               
+               // Add route markers
+               const route = result.routes[0]
+               const leg = route.legs[0]
+               
+               // Start marker (green)
+               new googleRef.current!.maps.Marker({
+                 position: leg.start_location,
+                 map: mapInstanceRef.current,
+                 title: 'Start: ' + leg.start_address,
+                 icon: {
+                   path: googleRef.current!.maps.SymbolPath.CIRCLE,
+                   scale: 8,
+                   fillColor: '#10B981',
+                   fillOpacity: 1,
+                   strokeColor: '#FFFFFF',
+                   strokeWeight: 2
+                 }
+               })
+               
+               // End marker (red)
+               new googleRef.current!.maps.Marker({
+                 position: leg.end_location,
+                 map: mapInstanceRef.current,
+                 title: 'End: ' + leg.end_address,
+                 icon: {
+                   path: googleRef.current!.maps.SymbolPath.CIRCLE,
+                   scale: 8,
+                   fillColor: '#EF4444',
+                   fillOpacity: 1,
+                   strokeColor: '#FFFFFF',
+                   strokeWeight: 2
+                 }
+               })
+               
+               // Fit map to show the entire route
+               const bounds = new googleRef.current!.maps.LatLngBounds()
+               bounds.extend(leg.start_location)
+               bounds.extend(leg.end_location)
+               mapInstanceRef.current?.fitBounds(bounds, 50)
+             } else {
+               console.error('Directions request failed due to', status)
+             }
+           }
+         )
+       }, [route])
 
   useEffect(() => {
     if (focusedReportId && mapInstanceRef.current) {
@@ -259,7 +418,7 @@ const MapComponent = ({ reports, onMapClick, focusedReportId, trafficView }: Map
   }, [focusedReportId, reports])
 
   return (
-    <div className="h-screen relative w-full">
+    <div className="h-full relative w-full">
       {isLoading && (
         <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center z-10 backdrop-blur-sm">
           <div className="flex flex-col items-center space-y-6">

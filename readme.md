@@ -1,159 +1,220 @@
-# Pulse - Civic Issue Reporting Platform
+# CityPulse - Real-Time Traffic & Civic Issue Reporting Platform
 
-A modern, professional web application for citizens to report civic issues on an interactive map. Built with React, TypeScript, and Google Maps API, designed to match the TomTom Traffic Index interface for a familiar and intuitive user experience.
+A modern, professional web application for real-time traffic monitoring and civic issue reporting in Bengaluru. Built with React, TypeScript, and Google Maps API, featuring live traffic data, route planning, and comprehensive traffic visualization.
 
-## Features
+## 🚦 Features
 
-- **TomTom-Inspired Interface**: Professional design matching the TomTom Traffic Index layout and styling
-- **Interactive Map**: Click anywhere on the map to report traffic issues with traffic light color coding
-- **Traffic Controls**: Map overlay controls for "All traffic", "Traffic flow", and "Traffic incidents"
-- **Real-time Feed**: Live updates of traffic reports with current status indicators
-- **Multi-step Reporting**: Guided wizard for submitting detailed traffic issue reports
-- **Photo Upload**: Drag-and-drop image upload with preview for visual documentation
-- **Responsive Design**: Works seamlessly on desktop and mobile devices
-- **Animated UI**: Smooth transitions and micro-interactions powered by Framer Motion
-- **Traffic Color System**: Green, yellow, orange, and red indicators for issue severity
-- **Professional Navigation**: Header with search, settings, and share functionality
-- **Focus Navigation**: Click feed items to focus map on specific traffic issues
+### **Real-Time Traffic Monitoring**
+- **Live Traffic Data**: Real-time Google Maps traffic layer showing current road conditions
+- **Traffic Color Coding**: Green (normal), Yellow (moderate), Red (heavy), Dark Red (severe)
+- **Bengaluru Focus**: Optimized for Bengaluru traffic patterns and road network
+- **Live Updates**: Traffic conditions update automatically
+
+### **Interactive Traffic Views**
+- **All Traffic**: Complete view with real-time traffic + user reports
+- **Flow**: Traffic flow issues (congestion, slow traffic, jams, construction)
+- **Incidents**: Traffic incidents (accidents, road blocking, incidents)
+- **Dynamic Legends**: Color-coded legends for each view type
+
+### **Route Planning**
+- **Google Places Integration**: Smart location autocomplete for route planning
+- **Real-Time Directions**: Live route calculation with traffic consideration
+- **Dynamic Route Colors**: Route lines change color based on traffic view
+- **Start/End Markers**: Clear visual indicators for route start and end points
+
+### **Civic Issue Reporting**
+- **Multi-Step Wizard**: Guided reporting process with location, photo, and description
+- **Photo Upload**: Mandatory photo upload with drag-and-drop support
+- **Location Options**: Choose between coordinates or manual location input
+- **Google Places Autocomplete**: Smart location search for manual input
+- **Real-Time Feed**: Live updates of submitted reports
+
+### **Advanced Map Features**
+- **Color-Coded Markers**: Different colored markers for different issue types
+- **Interactive Markers**: Hover animations and detailed info windows
+- **Zoom Controls**: Custom zoom in/out buttons
+- **Traffic Toggle**: Easy switching between traffic views
+- **Focus Navigation**: Click reports to focus map on specific locations
+
+### **Professional UI/UX**
+- **Modern Design**: Clean, professional interface with glassmorphism effects
+- **Responsive Layout**: Works seamlessly on desktop, tablet, and mobile
+- **Smooth Animations**: Framer Motion powered transitions and micro-interactions
 - **Accessibility**: Full keyboard navigation and screen reader support
+- **WhatsApp Integration**: Direct contact button for support
 
-## Tech Stack
+## 🛠️ Tech Stack
 
 - **Frontend**: React 18 with TypeScript
 - **Build Tool**: Vite
-- **Styling**: Tailwind CSS 3.4.1
-- **Maps**: Google Maps JavaScript API
+- **Styling**: Tailwind CSS 3.4.1 with custom animations
+- **Maps**: Google Maps JavaScript API with Places and Directions
 - **Animations**: Framer Motion
 - **Icons**: Heroicons
+- **UI Components**: shadcn/ui (New York style)
 - **State Management**: React Hooks
 
-## Design Inspiration
+## 🎨 Design System
 
-This application's design is directly inspired by the [TomTom Traffic Index](https://www.tomtom.com/traffic-index/bengaluru-traffic/), featuring:
+### **Color Palette**
+- **Primary**: `#3B82F6` (Blue) - Main brand color
+- **Secondary**: `#10B981` (Emerald) - Success states
+- **Accent**: `#8B5CF6` (Purple) - Tertiary actions
+- **Traffic Colors**:
+  - `#10B981` (Green) - Normal flow
+  - `#F59E0B` (Yellow) - Moderate congestion
+  - `#EF4444` (Red) - Heavy traffic
+  - `#991B1B` (Dark Red) - Severe congestion
 
-- Professional header with navigation and search functionality
-- Traffic-focused color palette (red, yellow, green, orange)
-- Map overlay controls for traffic visualization
-- Clean, data-driven interface design
-- Traffic light system for issue severity
-- Professional typography and spacing
-- Real-time status indicators
+### **Flow View Colors**
+- `#F97316` (Orange) - Traffic congestion
+- `#EAB308` (Yellow) - Slow moving traffic
+- `#EF4444` (Red) - Traffic jam
+- `#3B82F6` (Blue) - Construction work
 
-## Color Palette
+### **Incidents View Colors**
+- `#DC2626` (Red) - Traffic incident
+- `#991B1B` (Dark Red) - Accident
+- `#9333EA` (Purple) - Road blocking
 
-The application uses a TomTom-inspired traffic color palette:
-
-- **Primary**: `#E53E3E` (Red) - Main brand color for buttons and traffic issues
-- **Primary Hover**: `#C53030` (Darker red) - Hover states
-- **Secondary**: `#38A169` (Green) - Success states and resolved issues
-- **Accent**: `#3182CE` (Blue) - Links and tertiary actions
-- **Background**: `#FFFFFF` (White) - Main background
-- **Background Secondary**: `#F7FAFC` (Light gray) - Secondary backgrounds
-- **Text**: `#1A202C` (Dark gray) - Primary text
-- **Text Secondary**: `#4A5568` (Medium gray) - Secondary text
-- **Border**: `#E2E8F0` (Light gray) - Borders and dividers
-- **Traffic Colors**: 
-  - `#38A169` (Green) - Resolved issues
-  - `#D69E2E` (Yellow) - Pending issues
-  - `#DD6B20` (Orange) - Moderate issues
-  - `#E53E3E` (Red) - Active issues
-
-## Animations & Interactions
-
-- **Page Load**: Smooth fade-in animation for the entire application
-- **Header**: Glassmorphism header with gradient logo and responsive buttons
-- **Modal Wizard**: Multi-step animated wizard with progress indicators
-- **Feed Cards**: Staggered slide-up animations for report cards
-- **Map Markers**: Drop-in and bounce animations on hover
-- **Floating Action Button**: Spring animations with scale effects
-- **Mobile Feed**: Slide-up panel with drag handle
-- **Form Elements**: Enhanced focus states and micro-interactions
-- **Photo Upload**: Drag-and-drop with visual feedback
-- **Focus Navigation**: Smooth map panning to selected reports
-
-## Getting Started
+## 🚀 Getting Started
 
 ### Prerequisites
-
 - Node.js (version 16 or higher)
 - npm or yarn
+- Google Maps API key
 
 ### Installation
 
-1. Navigate to the frontend directory:
+1. **Clone the repository**:
    ```bash
-   cd frontend
+   git clone <repository-url>
+   cd pulse-ai/frontend
    ```
 
-2. Install dependencies:
+2. **Install dependencies**:
    ```bash
    npm install
    ```
 
-3. Set up Google Maps API Key:
-   - Get a Google Maps API key from [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
-   - Create a `.env` file in the frontend directory
-   - Add your API key: `VITE_GOOGLE_MAPS_API_KEY=your_api_key_here`
+3. **Set up Google Maps API**:
+   - Get a Google Maps API key from [Google Cloud Console](https://console.cloud.google.com/)
+   - Enable these APIs:
+     - Maps JavaScript API
+     - Places API
+     - Directions API
+   - Create a `.env` file in the frontend directory:
+     ```env
+     VITE_GOOGLE_MAPS_API_KEY=your_api_key_here
+     ```
 
-4. Start the development server:
+4. **Start development server**:
    ```bash
    npm run dev
    ```
 
-5. Open your browser and visit `http://localhost:5173`
+5. **Open your browser** and visit `http://localhost:5173`
 
-## Usage
+## 📱 Usage Guide
 
-### Desktop Experience
-1. **Split Layout**: Map on the left, live feed on the right
-2. **Report Issue**: Click the "Report Issue" button in the header or click on the map
-3. **Multi-Step Process**: Follow the animated wizard through location, description, photo, and confirmation
-4. **Feed Interaction**: Click any report card to focus the map on that location
-5. **Toggle Feed**: Use the hamburger menu to show/hide the feed panel
+### **Traffic Monitoring**
+1. **View Real Traffic**: Click "All traffic" to see live Google traffic data
+2. **Filter by Type**: Use "Flow" for traffic flow issues or "Incidents" for accidents
+3. **Read Legends**: Check the bottom-left legend for color meanings
+4. **Zoom & Pan**: Use zoom controls or mouse wheel to navigate
 
-### Mobile Experience
-1. **Full-Screen Map**: Map takes the full screen for optimal viewing
-2. **Floating Action Button**: Prominent FAB for quick reporting access
-3. **Slide-Up Feed**: Swipe up from bottom to view recent reports
-4. **Touch-Optimized**: Large touch targets and gesture-friendly interactions
-5. **Responsive Design**: Adapts seamlessly to all screen sizes
+### **Route Planning**
+1. **Plan Route**: Click "Plan Route" button in the route section
+2. **Enter Locations**: Use autocomplete for origin and destination
+3. **View Route**: Route appears on map with start/end markers
+4. **Traffic Consideration**: Route considers current traffic conditions
 
-### Advanced Features
-- **Drag & Drop**: Upload photos by dragging files onto the upload area
-- **Real-Time Updates**: New reports appear instantly in the feed
-- **Focus Navigation**: Seamless map-to-feed interaction
-- **Accessibility**: Full keyboard and screen reader support
+### **Reporting Issues**
+1. **Click Map**: Click anywhere on the map to report an issue
+2. **Choose Location**: Use coordinates or search for location
+3. **Upload Photo**: Mandatory photo upload (drag & drop supported)
+4. **Add Description**: Optional description of the issue
+5. **Submit Report**: Review and submit your report
 
-## Project Structure
+### **Mobile Experience**
+- **Full-Screen Map**: Optimized for mobile viewing
+- **Floating Action Button**: Easy access to reporting
+- **Touch-Friendly**: Large touch targets and gestures
+- **Responsive Legends**: Adapts to mobile screen size
+
+## 🏗️ Project Structure
 
 ```
-src/
-├── components/
-│   ├── Header.tsx          # Glassmorphism header with responsive controls
-│   ├── MapComponent.tsx    # Interactive map with animated markers
-│   ├── ModalWizard.tsx     # Multi-step animated reporting wizard
-│   ├── Feed.tsx            # Real-time report feed with cards
-│   └── FAB.tsx             # Floating action button for mobile
-├── App.tsx                 # Main application with responsive layout
-├── main.tsx               # Application entry point
-└── index.css              # Global styles, animations, and glassmorphism
+frontend/
+├── src/
+│   ├── components/
+│   │   ├── Header.tsx              # Main header with navigation
+│   │   ├── MapComponent.tsx        # Interactive map with traffic layer
+│   │   ├── ModalWizard.tsx         # Multi-step reporting wizard
+│   │   ├── Feed.tsx                # Real-time report feed
+│   │   ├── FAB.tsx                 # Floating action button
+│   │   ├── RoutePlanner.tsx        # Route planning dialog
+│   │   └── LiveTraffic.tsx         # Live traffic status component
+│   ├── App.tsx                     # Main application component
+│   ├── main.tsx                    # Application entry point
+│   └── index.css                   # Global styles and animations
+├── public/                         # Static assets
+├── tailwind.config.js              # Tailwind configuration
+├── package.json                    # Dependencies and scripts
+└── .env                           # Environment variables
 ```
 
-## Available Scripts
+## 🔧 Available Scripts
 
 - `npm run dev` - Start development server
 - `npm run build` - Build for production
 - `npm run preview` - Preview production build
 - `npm run lint` - Run ESLint
 
-## Contributing
+## 🌟 Key Features
+
+### **Real-Time Traffic Integration**
+- Live Google Maps traffic data
+- Color-coded road conditions
+- Automatic updates
+- Bengaluru-specific optimization
+
+### **Smart Route Planning**
+- Google Places autocomplete
+- Real-time directions
+- Traffic-aware routing
+- Dynamic route visualization
+
+### **Enhanced Reporting System**
+- Multi-step wizard interface
+- Mandatory photo upload
+- Location autocomplete
+- Real-time feed updates
+
+### **Professional Visualization**
+- Color-coded markers by type
+- Dynamic legends per view
+- Interactive map controls
+- Smooth animations
+
+## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-## License
+## 📄 License
 
 This project is part of the Pulse AI hackathon project.
+
+## 🆘 Support
+
+- **WhatsApp Support**: Click the green WhatsApp button for direct support
+- **Documentation**: Check this README for detailed usage instructions
+- **Issues**: Report bugs or feature requests through the repository
+
+---
+
+**CityPulse** - Making Bengaluru's traffic smarter, one report at a time! 🚦🗺️✨
