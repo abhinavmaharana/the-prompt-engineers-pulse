@@ -4,8 +4,9 @@
 @tailwind components;
 @tailwind utilities;
 
-/* CSS Variables - Light Futuristic Theme */
-:root {
+/* CSS Variables - Light Theme (Default) */
+:root,
+[data-theme="light"] {
   /* Base Colors */
   --bg-primary: #fafbfc;
   --bg-secondary: #f8fafc;
@@ -55,6 +56,52 @@
   --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
+/* Dark Theme */
+[data-theme="dark"] {
+  /* Base Colors */
+  --bg-primary: #0f111a;
+  --bg-secondary: #1a1d29;
+  --bg-tertiary: #242938;
+  --bg-glass: rgba(36, 41, 56, 0.8);
+  
+  /* Text Colors */
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-tertiary: #94a3b8;
+  --text-muted: #64748b;
+  
+  /* Accent Colors remain same for consistency */
+  --accent-emerald: #10b981;
+  --accent-violet: #8b5cf6;
+  --accent-blue: #06b6d4;
+  --accent-coral: #f97316;
+  --accent-neon: #00d4ff;
+  
+  /* Status Colors - slightly adjusted for dark theme */
+  --status-success: #10b981;
+  --status-warning: #f59e0b;
+  --status-error: #ef4444;
+  --status-info: #3b82f6;
+  
+  /* Borders & Dividers */
+  --border-light: #334155;
+  --border-medium: #475569;
+  --border-strong: #64748b;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.5);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.6), 0 8px 10px -6px rgb(0 0 0 / 0.6);
+  --shadow-glow: 0 0 20px rgb(139 92 246 / 0.4);
+  
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --gradient-emerald: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  --gradient-violet: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  --gradient-mood: linear-gradient(135deg, #06b6d4 0%, #8b5cf6 50%, #f97316 100%);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -68,6 +115,7 @@ body {
   color: var(--text-primary);
   overflow-x: hidden;
   line-height: 1.6;
+  transition: background-color 0.3s var(--ease-smooth), color 0.3s var(--ease-smooth);
 }
 
 html, body, #root {
@@ -99,6 +147,7 @@ html, body, #root {
   background: var(--bg-glass);
   backdrop-filter: blur(20px);
   border: 1px solid var(--border-light);
+  transition: all 0.3s var(--ease-smooth);
 }
 
 .text-gradient {
@@ -122,6 +171,14 @@ html, body, #root {
 
 .fade-in {
   animation: fadeIn 0.5s var(--ease-smooth) forwards;
+}
+
+/* Theme transition for all elements */
+.theme-transition {
+  transition: background-color 0.3s var(--ease-smooth), 
+              color 0.3s var(--ease-smooth), 
+              border-color 0.3s var(--ease-smooth),
+              box-shadow 0.3s var(--ease-smooth);
 }
 
 /* Keyframe Animations */
@@ -245,3 +302,44 @@ select:focus-visible {
 .mood-sad { background: linear-gradient(135deg, #f59e0b, #d97706); }
 .mood-angry { background: linear-gradient(135deg, #ef4444, #dc2626); }
 .mood-excited { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+
+/* Theme toggle button styles */
+.theme-toggle {
+  position: relative;
+  width: 3rem;
+  height: 1.5rem;
+  background: var(--border-medium);
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: all 0.3s var(--ease-smooth);
+  border: none;
+  outline: none;
+}
+
+.theme-toggle:hover {
+  background: var(--border-strong);
+}
+
+.theme-toggle-thumb {
+  position: absolute;
+  top: 0.125rem;
+  left: 0.125rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  background: var(--bg-tertiary);
+  border-radius: 50%;
+  transition: all 0.3s var(--ease-spring);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.theme-toggle.dark .theme-toggle-thumb {
+  transform: translateX(1.5rem);
+}
+
+.theme-toggle.dark {
+  background: var(--accent-violet);
+}

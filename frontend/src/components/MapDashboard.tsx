@@ -40,7 +40,7 @@ interface MarkerIconConfig {
 }
 
 // Light map style
-const mapStyle: google.maps.MapTypeStyle[] = [
+const lightMapStyle: google.maps.MapTypeStyle[] = [
   {
     "featureType": "all",
     "elementType": "labels.text.fill",
@@ -88,6 +88,66 @@ const mapStyle: google.maps.MapTypeStyle[] = [
   }
 ];
 
+// Dark map style
+const darkMapStyle: google.maps.MapTypeStyle[] = [
+  {
+    "elementType": "geometry",
+    "stylers": [{"color": "#1a1d29"}]
+  },
+  {
+    "elementType": "labels.icon",
+    "stylers": [{"visibility": "off"}]
+  },
+  {
+    "elementType": "labels.text.fill",
+    "stylers": [{"color": "#94a3b8"}]
+  },
+  {
+    "elementType": "labels.text.stroke",
+    "stylers": [{"color": "#1a1d29"}]
+  },
+  {
+    "featureType": "administrative",
+    "elementType": "geometry",
+    "stylers": [{"color": "#475569"}]
+  },
+  {
+    "featureType": "administrative.country",
+    "elementType": "labels.text.fill",
+    "stylers": [{"color": "#cbd5e1"}]
+  },
+  {
+    "featureType": "road",
+    "elementType": "geometry.fill",
+    "stylers": [{"color": "#334155"}]
+  },
+  {
+    "featureType": "road.arterial",
+    "elementType": "labels.text.fill",
+    "stylers": [{"color": "#94a3b8"}]
+  },
+  {
+    "featureType": "road.highway",
+    "elementType": "geometry.fill",
+    "stylers": [{"color": "#475569"}]
+  },
+  {
+    "featureType": "road.highway",
+    "elementType": "labels.text.fill",
+    "stylers": [{"color": "#f1f5f9"}]
+  },
+  {
+    "featureType": "water",
+    "elementType": "geometry",
+    "stylers": [{"color": "#0f111a"}]
+  },
+  {
+    "featureType": "water",
+    "elementType": "labels.text.fill",
+    "stylers": [{"color": "#64748b"}]
+  }
+];
+
 const render = (status: Status): React.ReactElement => {
   switch (status) {
     case Status.LOADING:
@@ -122,12 +182,37 @@ const MapComponent: React.FC<MapDashboardProps> = ({ filters, showMoodMap }) => 
   const [infoWindow, setInfoWindow] = useState<google.maps.InfoWindow | null>(null);
   const [moodOverlay, setMoodOverlay] = useState<google.maps.OverlayView | null>(null);
 
+  // Get current theme from data attribute
+  const getCurrentTheme = () => {
+    return document.documentElement.getAttribute('data-theme') || 'light';
+  };
+
+  const [currentTheme, setCurrentTheme] = useState(getCurrentTheme());
+
+  // Listen for theme changes
+  useEffect(() => {
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
+          setCurrentTheme(getCurrentTheme());
+        }
+      });
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme']
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
   const ref = useCallback((node: HTMLDivElement | null) => {
     if (node !== null && window.google) {
       const mapInstance = new window.google.maps.Map(node, {
         center: { lat: 12.9716, lng: 77.5946 }, // Bengaluru coordinates
         zoom: 11,
-        styles: mapStyle,
+        styles: currentTheme === 'dark' ? darkMapStyle : lightMapStyle,
         disableDefaultUI: true,
         zoomControl: true,
         mapTypeControl: false,
@@ -140,7 +225,16 @@ const MapComponent: React.FC<MapDashboardProps> = ({ filters, showMoodMap }) => 
       setMap(mapInstance);
       setInfoWindow(new window.google.maps.InfoWindow());
     }
-  }, []);
+  }, [currentTheme]);
+
+  // Update map style when theme changes
+  useEffect(() => {
+    if (map) {
+      map.setOptions({
+        styles: currentTheme === 'dark' ? darkMapStyle : lightMapStyle
+      });
+    }
+  }, [map, currentTheme]);
 
   // Listen to Firestore events in real-time
   useEffect(() => {

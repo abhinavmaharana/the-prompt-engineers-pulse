@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import ThemeToggle from './ThemeToggle';
 
 interface NavItem {
   id: string;
@@ -66,6 +67,9 @@ const Header: React.FC<HeaderProps> = ({ activeSection = 'dashboard', onSectionC
 
           {/* Actions */}
           <div className="flex items-center space-x-3">
+            {/* Theme Toggle */}
+            <ThemeToggle showLabel={false} />
+
             {/* WhatsApp Bot CTA */}
             <button className="hidden sm:flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-[#25d366] to-[#128c7e] text-white rounded-xl font-medium text-sm hover:shadow-lg transition-all duration-200 hover:scale-105">
               <span className="text-base">💬</span>
@@ -111,6 +115,11 @@ const Header: React.FC<HeaderProps> = ({ activeSection = 'dashboard', onSectionC
                   <span>{item.label}</span>
                 </button>
               ))}
+              
+              {/* Mobile Theme Toggle */}
+              <div className="px-4 py-3">
+                <ThemeToggle showLabel={true} />
+              </div>
               
               {/* Mobile WhatsApp CTA */}
               <button className="flex items-center space-x-3 px-4 py-3 bg-gradient-to-r from-[#25d366] to-[#128c7e] text-white rounded-xl font-medium text-sm mt-4">
