@@ -1,17 +1,19 @@
 import { useEffect, useRef, useState } from 'react'
 import { Loader } from '@googlemaps/js-api-loader'
 import type { Report } from '../App'
+import { getMoodColor, getMoodEmoji } from '../utils/sentimentAnalysis'
 
 interface MapComponentProps {
   reports: Report[]
   onMapClick: (lat: number, lng: number) => void
   focusedReportId?: string
   trafficView: 'all' | 'flow' | 'incidents'
+  moodFilter: 'all' | 'positive' | 'negative' | 'frustrated' | 'concerned' | 'satisfied' | 'neutral'
   route?: { origin: string; destination: string; routeType?: string; transportMode?: string } | null
   onMapReady?: (map: google.maps.Map) => void
 }
 
-const MapComponent = ({ reports, onMapClick, focusedReportId, trafficView, route, onMapReady }: MapComponentProps) => {
+const MapComponent = ({ reports, onMapClick, focusedReportId, trafficView, moodFilter, route, onMapReady }: MapComponentProps) => {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<google.maps.Map | null>(null)
   const googleRef = useRef<typeof google | null>(null)
@@ -21,9 +23,15 @@ const MapComponent = ({ reports, onMapClick, focusedReportId, trafficView, route
   const trafficLayerRef = useRef<google.maps.TrafficLayer | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  // Function to get marker color based on traffic view and report content
-  const getMarkerColor = (trafficView: string, description: string): string => {
-    const desc = description.toLowerCase()
+  // Function to get marker color based on traffic view, mood, and report content
+  const getMarkerColor = (trafficView: string, report: Report): string => {
+    // If mood filter is active, use mood colors
+    if (moodFilter !== 'all' && report.sentiment) {
+      return getMoodColor(report.sentiment.mood)
+    }
+    
+    // Otherwise use traffic view colors
+    const desc = report.description.toLowerCase()
     
     if (trafficView === 'flow') {
       if (desc.includes('congestion')) return '#f97316' // orange-500
@@ -39,7 +47,8 @@ const MapComponent = ({ reports, onMapClick, focusedReportId, trafficView, route
       return '#dc2626' // default red-600 for incidents
     }
     
-    return '#dc2626' // default red for all traffic
+    // Default: use mood color if available, otherwise red
+    return report.sentiment ? getMoodColor(report.sentiment.mood) : '#dc2626'
   }
 
   // Function to get route color based on traffic view and conditions
@@ -213,7 +222,7 @@ const MapComponent = ({ reports, onMapClick, focusedReportId, trafficView, route
     // Create bounds to fit all markers
     const bounds = new googleRef.current!.maps.LatLngBounds()
 
-    // Filter reports based on traffic view
+    // Filter reports based on traffic view and mood
     let filteredReports = reports
     if (trafficView === 'incidents') {
       // Show only incident reports
@@ -232,6 +241,13 @@ const MapComponent = ({ reports, onMapClick, focusedReportId, trafficView, route
       )
     }
     // 'all' shows all reports
+    
+    // Apply mood filter
+    if (moodFilter !== 'all') {
+      filteredReports = filteredReports.filter(report => 
+        report.sentiment && report.sentiment.mood === moodFilter
+      )
+    }
 
     console.log('Traffic View:', trafficView)
     console.log('Total Reports:', reports.length)
@@ -245,7 +261,7 @@ const MapComponent = ({ reports, onMapClick, focusedReportId, trafficView, route
                 console.log('Creating marker for:', report.description, 'at:', report.latitude, report.longitude)
 
         // Create custom colored marker
-        const markerColor = getMarkerColor(trafficView, report.description)
+                        const markerColor = getMarkerColor(trafficView, report)
         const marker = new googleRef.current!.maps.Marker({
           position: { lat: report.latitude, lng: report.longitude },
           map: mapInstanceRef.current,
@@ -275,8 +291,8 @@ const MapComponent = ({ reports, onMapClick, focusedReportId, trafficView, route
         content: `
           <div style="padding: 12px; font-family: system-ui; background: #fff; border-radius: 8px; max-width: 260px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
             <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
-              <div style="width: 24px; height: 24px; background: #E53E3E; color: white; font-weight: 600; font-size: 12px; border-radius: 6px; display: flex; align-items: center; justify-content: center;">
-                ${report.description.charAt(0).toUpperCase()}
+              <div style="width: 24px; height: 24px; background: ${markerColor}; color: white; font-weight: 600; font-size: 12px; border-radius: 6px; display: flex; align-items: center; justify-content: center;">
+                ${report.sentiment ? getMoodEmoji(report.sentiment.mood) : report.description.charAt(0).toUpperCase()}
               </div>
               <div style="flex: 1;">
                 <div style="font-weight: 600; font-size: 13px; margin-bottom: 2px; color: #1A202C;">
@@ -284,9 +300,15 @@ const MapComponent = ({ reports, onMapClick, focusedReportId, trafficView, route
                 </div>
                 <div style="font-size: 10px; color: #4A5568;">
                   📍 Bengaluru • 🕒 ${report.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  ${report.sentiment ? ` • ${report.sentiment.emotion}` : ''}
                 </div>
               </div>
             </div>
+            ${report.sentiment ? `
+            <div style="background: ${markerColor}20; border: 1px solid ${markerColor}; padding: 6px; border-radius: 6px; font-size: 10px; color: #4A5568; margin-bottom: 6px;">
+              🎭 Mood: ${report.sentiment.emotion} (${Math.round(report.sentiment.confidence * 100)}% confidence)
+            </div>
+            ` : ''}
             <div style="background: #F7FAFC; border: 1px solid #E2E8F0; padding: 6px; border-radius: 6px; font-size: 10px; font-family: monospace; color: #4A5568;">
               ${report.latitude.toFixed(6)}, ${report.longitude.toFixed(6)}
             </div>

@@ -10,6 +10,9 @@ import Feed from './components/Feed'
 import FAB from './components/FAB'
 import RoutePlannerSection from './components/RoutePlannerSection'
 import LiveTraffic from './components/LiveTraffic'
+import MoodFilter from './components/MoodFilter'
+import MoodAnalytics from './components/MoodAnalytics'
+import { analyzeSentiment } from './utils/sentimentAnalysis'
 
 // WhatsApp Icon Component
 const WhatsAppIcon = ({ className }: { className?: string }) => (
@@ -30,50 +33,63 @@ export interface Report {
   description: string
   image?: File
   timestamp: Date
+  sentiment?: {
+    mood: 'positive' | 'negative' | 'neutral' | 'frustrated' | 'concerned' | 'satisfied'
+    score: number
+    confidence: number
+    keywords: string[]
+    emotion: string
+  }
 }
 
 function App() {
   const [reports, setReports] = useState<Report[]>([
     {
       id: '1',
-      description: 'Large pothole causing traffic congestion',
+      description: 'Large pothole causing traffic congestion - very frustrated with this terrible road condition',
       latitude: 12.9716,
       longitude: 77.5946,
-      timestamp: new Date()
+      timestamp: new Date(),
+      sentiment: analyzeSentiment('Large pothole causing traffic congestion - very frustrated with this terrible road condition')
     },
     {
       id: '2',
-      description: 'Traffic accident on main road',
+      description: 'Traffic accident on main road - concerned about safety',
       latitude: 12.9789,
       longitude: 77.5917,
-      timestamp: new Date(Date.now() - 300000) // 5 minutes ago
+      timestamp: new Date(Date.now() - 300000), // 5 minutes ago
+      sentiment: analyzeSentiment('Traffic accident on main road - concerned about safety')
     },
     {
       id: '3',
-      description: 'Heavy traffic jam near mall',
+      description: 'Heavy traffic jam near mall - stuck here for hours',
       latitude: 12.9655,
       longitude: 77.5855,
-      timestamp: new Date(Date.now() - 600000) // 10 minutes ago
+      timestamp: new Date(Date.now() - 600000), // 10 minutes ago
+      sentiment: analyzeSentiment('Heavy traffic jam near mall - stuck here for hours')
     },
     {
       id: '4',
-      description: 'Road incident blocking traffic',
+      description: 'Road incident blocking traffic - this is getting ridiculous',
       latitude: 12.9833,
       longitude: 77.5833,
-      timestamp: new Date(Date.now() - 900000) // 15 minutes ago
+      timestamp: new Date(Date.now() - 900000), // 15 minutes ago
+      sentiment: analyzeSentiment('Road incident blocking traffic - this is getting ridiculous')
     },
     {
       id: '5',
-      description: 'Slow moving traffic due to construction',
+      description: 'Great news! Construction work completed and traffic is flowing smoothly now',
       latitude: 12.9700,
       longitude: 77.5900,
-      timestamp: new Date(Date.now() - 1200000) // 20 minutes ago
+      timestamp: new Date(Date.now() - 1200000), // 20 minutes ago
+      sentiment: analyzeSentiment('Great news! Construction work completed and traffic is flowing smoothly now')
     }
   ])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [focusedReportId, setFocusedReportId] = useState<string | null>(null)
   const [trafficView, setTrafficView] = useState<'all' | 'flow' | 'incidents'>('all')
+  const [moodFilter, setMoodFilter] = useState<'all' | 'positive' | 'negative' | 'frustrated' | 'concerned' | 'satisfied' | 'neutral'>('all')
 
   const [route, setRoute] = useState<{ origin: string; destination: string; routeType?: string; transportMode?: string } | null>(null)
   const mapRef = useRef<google.maps.Map | null>(null)
@@ -85,13 +101,17 @@ function App() {
 
   const handleSubmitReport = (description: string, image?: File) => {
     if (selectedLocation) {
+      // Analyze sentiment of the report
+      const sentiment = analyzeSentiment(description)
+      
       const newReport: Report = {
         id: Date.now().toString(),
         latitude: selectedLocation.lat,
         longitude: selectedLocation.lng,
         description,
         image,
-        timestamp: new Date()
+        timestamp: new Date(),
+        sentiment
       }
       setReports(prev => [newReport, ...prev])
       setIsModalOpen(false)
@@ -121,6 +141,10 @@ function App() {
     // - 'walking': Walking route
     // - 'bicycling': Cycling route
     // - 'transit': Public transit route
+  }
+
+  const handleMoodFilterChange = (mood: 'all' | 'positive' | 'negative' | 'frustrated' | 'concerned' | 'satisfied' | 'neutral') => {
+    setMoodFilter(mood)
   }
 
   const handleMapReady = (map: google.maps.Map) => {
@@ -191,14 +215,19 @@ function App() {
             
             {/* Map container with enhanced styling */}
             <div className="relative h-[80vh] rounded-3xl overflow-hidden">
-                                   <MapComponent
-                       reports={reports}
-                       onMapClick={handleMapClick}
-                       focusedReportId={focusedReportId || undefined}
-                       trafficView={trafficView}
-                       route={route}
-                       onMapReady={handleMapReady}
-                     />
+              <MoodFilter
+                moodFilter={moodFilter}
+                onMoodFilterChange={handleMoodFilterChange}
+              />
+              <MapComponent
+                reports={reports}
+                onMapClick={handleMapClick}
+                focusedReportId={focusedReportId || undefined}
+                trafficView={trafficView}
+                moodFilter={moodFilter}
+                route={route}
+                onMapReady={handleMapReady}
+              />
             </div>
             
                          {/* Bottom decorative border */}
@@ -388,12 +417,56 @@ function App() {
          )}
       </section>
 
+                   {/* Mood Analytics Section */}
+                   <section className="px-6 py-8">
+                     <div className="max-w-7xl mx-auto">
+                       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                         <div className="lg:col-span-2">
+                           <MoodAnalytics reports={reports} />
+                         </div>
+                         <div className="lg:col-span-1">
+                           <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg border-0">
+                             <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                               <span>📊</span>
+                               Quick Stats
+                             </h3>
+                             <div className="space-y-3">
+                               <div className="flex justify-between items-center">
+                                 <span className="text-sm text-gray-600">Total Reports</span>
+                                 <span className="font-semibold text-gray-800">{reports.length}</span>
+                               </div>
+                               <div className="flex justify-between items-center">
+                                 <span className="text-sm text-gray-800">Today's Reports</span>
+                                 <span className="font-semibold text-gray-800">
+                                   {reports.filter(r => {
+                                     const today = new Date()
+                                     const reportDate = new Date(r.timestamp)
+                                     return today.toDateString() === reportDate.toDateString()
+                                   }).length}
+                                 </span>
+                               </div>
+                               <div className="flex justify-between items-center">
+                                 <span className="text-sm text-gray-600">Avg. Sentiment</span>
+                                 <span className="font-semibold text-gray-800">
+                                   {reports.length > 0 ? 
+                                     (reports.reduce((sum, r) => sum + (r.sentiment?.score || 0), 0) / reports.length).toFixed(2) : 
+                                     '0.00'
+                                   }
+                                 </span>
+                               </div>
+                             </div>
+                           </div>
+                         </div>
+                       </div>
+                     </div>
+                   </section>
+
                    {/* Live Traffic Section */}
-             <section className="w-full px-6 py-8 relative">
-               <div className="max-w-7xl mx-auto">
-                 <LiveTraffic />
-               </div>
-             </section>
+                   <section className="w-full px-6 py-8 relative">
+                     <div className="max-w-7xl mx-auto">
+                       <LiveTraffic />
+                     </div>
+                   </section>
 
              {/* Feed Section */}
              <section className="w-full px-6 py-12 relative">
