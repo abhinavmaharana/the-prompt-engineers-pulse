@@ -18,21 +18,57 @@ const MapComponent = ({ reports, onMapClick, focusedReportId, trafficView }: Map
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
+    // Prevent multiple initializations
+    if (mapInstanceRef.current) {
+      console.log('Map already initialized, skipping...')
+      return
+    }
+
     const initMap = async () => {
+      console.log('Initializing map...')
+      const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
+      console.log('API Key:', apiKey ? 'Present' : 'Missing')
+      
+      if (!apiKey || apiKey === 'YOUR_GOOGLE_MAPS_API_KEY') {
+        console.error('Google Maps API key is missing or invalid')
+        setIsLoading(false)
+        if (mapRef.current) {
+          mapRef.current.innerHTML = `
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; background: #f5f5f5; color: #333; font-family: system-ui; padding: 2rem;">
+              <h2 style="margin-bottom: 1rem; color: #dc2626;">Google Maps API Key Required</h2>
+              <p style="margin-bottom: 1rem; text-align: center;">To display the map and traffic markers, you need to set up a Google Maps API key.</p>
+              <div style="background: #fef3c7; border: 1px solid #f59e0b; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                <h3 style="margin-bottom: 0.5rem; color: #92400e;">Setup Instructions:</h3>
+                <ol style="text-align: left; margin: 0; padding-left: 1.5rem;">
+                  <li>Get a Google Maps API key from <a href="https://console.cloud.google.com/" target="_blank" style="color: #dc2626;">Google Cloud Console</a></li>
+                  <li>Create a file named <code>.env</code> in the frontend directory</li>
+                  <li>Add: <code>VITE_GOOGLE_MAPS_API_KEY=your_api_key_here</code></li>
+                  <li>Restart the development server</li>
+                </ol>
+              </div>
+              <p style="font-size: 0.9rem; color: #666;">For testing, you can use a free tier API key with Maps JavaScript API enabled.</p>
+            </div>
+          `
+        }
+        return
+      }
+      
       const loader = new Loader({
-        apiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || 'YOUR_GOOGLE_MAPS_API_KEY',
+        apiKey: apiKey,
         version: 'weekly',
         libraries: ['places']
       })
 
       try {
+        console.log('Loading Google Maps API...')
         const google = await loader.load()
+        console.log('Google Maps API loaded successfully')
         googleRef.current = google
 
         if (mapRef.current) {
           const map = new google.maps.Map(mapRef.current, {
             center: { lat: 12.9716, lng: 77.5946 },
-            zoom: 13,
+            zoom: 12,
             mapTypeId: google.maps.MapTypeId.ROADMAP,
             mapTypeControl: false,
             streetViewControl: false,
@@ -60,11 +96,23 @@ const MapComponent = ({ reports, onMapClick, focusedReportId, trafficView }: Map
             }
           })
 
+
+
           map.addListener('tilesloaded', () => setIsLoading(false))
         }
       } catch (error) {
         console.error('Error loading Google Maps:', error)
         setIsLoading(false)
+        // Show error message on the map
+        if (mapRef.current) {
+          mapRef.current.innerHTML = `
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; background: #f5f5f5; color: #333; font-family: system-ui;">
+              <h2 style="margin-bottom: 1rem;">Map Loading Error</h2>
+              <p style="margin-bottom: 1rem;">${error instanceof Error ? error.message : 'Unknown error'}</p>
+              <p style="font-size: 0.9rem; color: #666;">Please check your Google Maps API key</p>
+            </div>
+          `
+        }
       }
     }
 
@@ -82,6 +130,9 @@ const MapComponent = ({ reports, onMapClick, focusedReportId, trafficView }: Map
     infoWindowsRef.current.forEach(infoWindow => infoWindow.close())
     markersRef.current = []
     infoWindowsRef.current = []
+
+    // Create bounds to fit all markers
+    const bounds = new googleRef.current!.maps.LatLngBounds()
 
     // Filter reports based on traffic view
     let filteredReports = reports
@@ -108,49 +159,29 @@ const MapComponent = ({ reports, onMapClick, focusedReportId, trafficView }: Map
     console.log('Filtered Reports:', filteredReports.length)
     console.log('Filtered Reports:', filteredReports)
 
-    // Test with a simple default marker first
-    if (filteredReports.length > 0) {
-      const testMarker = new googleRef.current!.maps.Marker({
-        position: { lat: 12.9716, lng: 77.5946 },
-        map: mapInstanceRef.current,
-        title: 'Test Marker'
-      })
-      console.log('Test marker created:', testMarker)
-    }
+
 
     filteredReports.forEach((report) => {
-      // Different marker colors based on traffic view
-      let markerColor = '#EF4444' // Default red
-      if (trafficView === 'flow') {
-        markerColor = '#F59E0B' // Yellow for flow
-      } else if (trafficView === 'incidents') {
-        markerColor = '#DC2626' // Dark red for incidents
-      }
+      try {
+                console.log('Creating marker for:', report.description, 'at:', report.latitude, report.longitude)
 
-      // Create a simple colored circle marker
-      const markerIcon = {
-        path: googleRef.current!.maps.SymbolPath.CIRCLE,
-        fillColor: markerColor,
-        fillOpacity: 0.8,
-        strokeColor: '#FFFFFF',
-        strokeWeight: 2,
-        scale: 8
-      }
+        // Try a simple approach first - use default marker
+        const marker = new googleRef.current!.maps.Marker({
+          position: { lat: report.latitude, lng: report.longitude },
+          map: mapInstanceRef.current,
+          title: report.description,
+          animation: googleRef.current!.maps.Animation.DROP
+        })
 
-      console.log('Creating marker for:', report.description, 'at:', report.latitude, report.longitude)
+        console.log('Marker created successfully:', marker)
+        console.log('Marker position:', marker.getPosition()?.lat(), marker.getPosition()?.lng())
+        console.log('Marker is on map:', marker.getMap() === mapInstanceRef.current)
 
-      const marker = new googleRef.current!.maps.Marker({
-        position: { lat: report.latitude, lng: report.longitude },
-        map: mapInstanceRef.current,
-        icon: markerIcon,
-        title: report.description,
-        animation: googleRef.current!.maps.Animation.DROP
-      })
+        // Extend bounds to include this marker
+        bounds.extend({ lat: report.latitude, lng: report.longitude })
 
-      console.log('Marker created successfully:', marker)
-
-      marker.addListener('mouseover', () => marker.setAnimation(googleRef.current!.maps.Animation.BOUNCE))
-      marker.addListener('mouseout', () => marker.setAnimation(null))
+        marker.addListener('mouseover', () => marker.setAnimation(googleRef.current!.maps.Animation.BOUNCE))
+        marker.addListener('mouseout', () => marker.setAnimation(null))
 
       const infoWindow = new googleRef.current!.maps.InfoWindow({
         content: `
@@ -182,9 +213,34 @@ const MapComponent = ({ reports, onMapClick, focusedReportId, trafficView }: Map
         infoWindow.open(mapInstanceRef.current, marker)
       })
 
-      markersRef.current.push(marker)
-      infoWindowsRef.current.push(infoWindow)
+        markersRef.current.push(marker)
+        infoWindowsRef.current.push(infoWindow)
+      } catch (error) {
+        console.error('Error creating marker for report:', report.description, error)
+      }
     })
+
+    // Fit map to show all markers with a small delay to ensure map is ready
+    setTimeout(() => {
+      if (bounds.isEmpty()) {
+        // If no markers, center on Bengaluru
+        mapInstanceRef.current?.setCenter({ lat: 12.9716, lng: 77.5946 })
+        mapInstanceRef.current?.setZoom(12)
+        console.log('No markers, centered on Bengaluru')
+      } else {
+        // Fit bounds with padding
+        mapInstanceRef.current?.fitBounds(bounds, 50)
+        console.log('Fitted bounds to show all markers')
+        console.log('Bounds:', bounds.getNorthEast().lat(), bounds.getNorthEast().lng(), 'to', bounds.getSouthWest().lat(), bounds.getSouthWest().lng())
+        
+        // Force a specific view to ensure markers are visible
+        setTimeout(() => {
+          mapInstanceRef.current?.setCenter({ lat: 12.9716, lng: 77.5946 })
+          mapInstanceRef.current?.setZoom(11)
+          console.log('Forced map to center and zoom for better marker visibility')
+        }, 500)
+      }
+    }, 100)
   }, [reports, trafficView])
 
   useEffect(() => {
