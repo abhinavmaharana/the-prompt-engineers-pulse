@@ -6,11 +6,13 @@ interface MapComponentProps {
   reports: Report[]
   onMapClick: (lat: number, lng: number) => void
   focusedReportId?: string
+  trafficView: 'all' | 'flow' | 'incidents'
 }
 
-const MapComponent = ({ reports, onMapClick, focusedReportId }: MapComponentProps) => {
+const MapComponent = ({ reports, onMapClick, focusedReportId, trafficView }: MapComponentProps) => {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<google.maps.Map | null>(null)
+  const googleRef = useRef<typeof google | null>(null)
   const markersRef = useRef<google.maps.Marker[]>([])
   const infoWindowsRef = useRef<google.maps.InfoWindow[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -25,6 +27,7 @@ const MapComponent = ({ reports, onMapClick, focusedReportId }: MapComponentProp
 
       try {
         const google = await loader.load()
+        googleRef.current = google
 
         if (mapRef.current) {
           const map = new google.maps.Map(mapRef.current, {
@@ -69,55 +72,110 @@ const MapComponent = ({ reports, onMapClick, focusedReportId }: MapComponentProp
   }, [onMapClick])
 
   useEffect(() => {
-    if (!mapInstanceRef.current) return
+    if (!mapInstanceRef.current || !googleRef.current) return
+
+    console.log('Creating markers...')
+    console.log('Google Maps available:', !!googleRef.current)
+    console.log('Map instance available:', !!mapInstanceRef.current)
 
     markersRef.current.forEach(marker => marker.setMap(null))
     infoWindowsRef.current.forEach(infoWindow => infoWindow.close())
     markersRef.current = []
     infoWindowsRef.current = []
 
-    reports.forEach((report) => {
-      const markerIcon = {
-        url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJDNi40OCAyIDIgNi40OCAyIDEyQzIgMTcuNTIgNi40OCAyMiAxMiAyMkMxNy41MiAyMiAyMiAxNy41MiAyMiAxMkMyMiA2LjQ4IDE3LjUyIDIgMTIgMloiIGZpbGw9IiNFRjQ0NDQiLz4KPHBhdGggZD0iTTEyIDZDNi40OCA2IDIgMTAuNDggMiAxNkMyIDIxLjUyIDYuNDggMjYgMTIgMjZDMjEuNTIgMjYgMjYgMjEuNTIgMjYgMTZDMjYgMTAuNDggMjEuNTIgNiAxMiA2WiIgZmlsbD0iI0ZGRkZGRiIvPgo8L3N2Zz4K',
-        scaledSize: new google.maps.Size(30, 50),
-        anchor: new google.maps.Point(15, 50)
+    // Filter reports based on traffic view
+    let filteredReports = reports
+    if (trafficView === 'incidents') {
+      // Show only incident reports
+      filteredReports = reports.filter(report => 
+        report.description.toLowerCase().includes('incident') || 
+        report.description.toLowerCase().includes('accident') ||
+        report.description.toLowerCase().includes('blocking')
+      )
+    } else if (trafficView === 'flow') {
+      // Show only flow-related reports (congestion, slow traffic, etc.)
+      filteredReports = reports.filter(report => 
+        report.description.toLowerCase().includes('congestion') || 
+        report.description.toLowerCase().includes('slow') || 
+        report.description.toLowerCase().includes('jam') ||
+        report.description.toLowerCase().includes('construction')
+      )
+    }
+    // 'all' shows all reports
+
+    console.log('Traffic View:', trafficView)
+    console.log('Total Reports:', reports.length)
+    console.log('Filtered Reports:', filteredReports.length)
+    console.log('Filtered Reports:', filteredReports)
+
+    // Test with a simple default marker first
+    if (filteredReports.length > 0) {
+      const testMarker = new googleRef.current!.maps.Marker({
+        position: { lat: 12.9716, lng: 77.5946 },
+        map: mapInstanceRef.current,
+        title: 'Test Marker'
+      })
+      console.log('Test marker created:', testMarker)
+    }
+
+    filteredReports.forEach((report) => {
+      // Different marker colors based on traffic view
+      let markerColor = '#EF4444' // Default red
+      if (trafficView === 'flow') {
+        markerColor = '#F59E0B' // Yellow for flow
+      } else if (trafficView === 'incidents') {
+        markerColor = '#DC2626' // Dark red for incidents
       }
 
-      const marker = new google.maps.Marker({
+      // Create a simple colored circle marker
+      const markerIcon = {
+        path: googleRef.current!.maps.SymbolPath.CIRCLE,
+        fillColor: markerColor,
+        fillOpacity: 0.8,
+        strokeColor: '#FFFFFF',
+        strokeWeight: 2,
+        scale: 8
+      }
+
+      console.log('Creating marker for:', report.description, 'at:', report.latitude, report.longitude)
+
+      const marker = new googleRef.current!.maps.Marker({
         position: { lat: report.latitude, lng: report.longitude },
         map: mapInstanceRef.current,
         icon: markerIcon,
         title: report.description,
-        animation: google.maps.Animation.DROP
+        animation: googleRef.current!.maps.Animation.DROP
       })
 
-      marker.addListener('mouseover', () => marker.setAnimation(google.maps.Animation.BOUNCE))
+      console.log('Marker created successfully:', marker)
+
+      marker.addListener('mouseover', () => marker.setAnimation(googleRef.current!.maps.Animation.BOUNCE))
       marker.addListener('mouseout', () => marker.setAnimation(null))
 
-              const infoWindow = new google.maps.InfoWindow({
-          content: `
-            <div style="padding: 12px; font-family: system-ui; background: #fff; border-radius: 8px; max-width: 260px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-              <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
-                <div style="width: 24px; height: 24px; background: #E53E3E; color: white; font-weight: 600; font-size: 12px; border-radius: 6px; display: flex; align-items: center; justify-content: center;">
-                  ${report.description.charAt(0).toUpperCase()}
-                </div>
-                <div style="flex: 1;">
-                  <div style="font-weight: 600; font-size: 13px; margin-bottom: 2px; color: #1A202C;">
-                    ${report.description}
-                  </div>
-                  <div style="font-size: 10px; color: #4A5568;">
-                    📍 Bengaluru • 🕒 ${report.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </div>
-                </div>
+      const infoWindow = new googleRef.current!.maps.InfoWindow({
+        content: `
+          <div style="padding: 12px; font-family: system-ui; background: #fff; border-radius: 8px; max-width: 260px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+            <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
+              <div style="width: 24px; height: 24px; background: #E53E3E; color: white; font-weight: 600; font-size: 12px; border-radius: 6px; display: flex; align-items: center; justify-content: center;">
+                ${report.description.charAt(0).toUpperCase()}
               </div>
-              <div style="background: #F7FAFC; border: 1px solid #E2E8F0; padding: 6px; border-radius: 6px; font-size: 10px; font-family: monospace; color: #4A5568;">
-                ${report.latitude.toFixed(6)}, ${report.longitude.toFixed(6)}
+              <div style="flex: 1;">
+                <div style="font-weight: 600; font-size: 13px; margin-bottom: 2px; color: #1A202C;">
+                  ${report.description}
+                </div>
+                <div style="font-size: 10px; color: #4A5568;">
+                  📍 Bengaluru • 🕒 ${report.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </div>
               </div>
             </div>
-          `,
-          maxWidth: 280,
-          pixelOffset: new google.maps.Size(0, -30)
-        })
+            <div style="background: #F7FAFC; border: 1px solid #E2E8F0; padding: 6px; border-radius: 6px; font-size: 10px; font-family: monospace; color: #4A5568;">
+              ${report.latitude.toFixed(6)}, ${report.longitude.toFixed(6)}
+            </div>
+          </div>
+        `,
+        maxWidth: 280,
+        pixelOffset: new googleRef.current!.maps.Size(0, -30)
+      })
 
       marker.addListener('click', () => {
         infoWindowsRef.current.forEach(iw => iw.close())
@@ -127,7 +185,7 @@ const MapComponent = ({ reports, onMapClick, focusedReportId }: MapComponentProp
       markersRef.current.push(marker)
       infoWindowsRef.current.push(infoWindow)
     })
-  }, [reports])
+  }, [reports, trafficView])
 
   useEffect(() => {
     if (focusedReportId && mapInstanceRef.current) {

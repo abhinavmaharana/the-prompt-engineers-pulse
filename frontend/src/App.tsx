@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState } from 'react'
+import { AnimatePresence } from 'framer-motion'
 import { PlusIcon, MinusIcon } from '@heroicons/react/24/outline'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -19,10 +19,47 @@ export interface Report {
 }
 
 function App() {
-  const [reports, setReports] = useState<Report[]>([])
+  const [reports, setReports] = useState<Report[]>([
+    {
+      id: '1',
+      description: 'Large pothole causing traffic congestion',
+      latitude: 12.9716,
+      longitude: 77.5946,
+      timestamp: new Date()
+    },
+    {
+      id: '2',
+      description: 'Traffic accident on main road',
+      latitude: 12.9789,
+      longitude: 77.5917,
+      timestamp: new Date(Date.now() - 300000) // 5 minutes ago
+    },
+    {
+      id: '3',
+      description: 'Heavy traffic jam near mall',
+      latitude: 12.9655,
+      longitude: 77.5855,
+      timestamp: new Date(Date.now() - 600000) // 10 minutes ago
+    },
+    {
+      id: '4',
+      description: 'Road incident blocking traffic',
+      latitude: 12.9833,
+      longitude: 77.5833,
+      timestamp: new Date(Date.now() - 900000) // 15 minutes ago
+    },
+    {
+      id: '5',
+      description: 'Slow moving traffic due to construction',
+      latitude: 12.9700,
+      longitude: 77.5900,
+      timestamp: new Date(Date.now() - 1200000) // 20 minutes ago
+    }
+  ])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [focusedReportId, setFocusedReportId] = useState<string | null>(null)
+  const [trafficView, setTrafficView] = useState<'all' | 'flow' | 'incidents'>('all')
 
   const handleMapClick = (lat: number, lng: number) => {
     setSelectedLocation({ lat, lng })
@@ -77,24 +114,45 @@ function App() {
 
       {/* Map Section */}
       <section className="relative h-[100vh] w-full">
-        <MapComponent
-          reports={reports}
-          onMapClick={handleMapClick}
-          focusedReportId={focusedReportId || undefined}
-        />
+                 <MapComponent
+           reports={reports}
+           onMapClick={handleMapClick}
+           focusedReportId={focusedReportId || undefined}
+           trafficView={trafficView}
+         />
 
-        {/* Map Controls */}
-        <div className="absolute top-6 left-6 z-10">
-          <Card className="p-4 bg-white/90 backdrop-blur-lg shadow-xl border-0">
-            <CardContent className="p-0">
-              <div className="flex gap-2">
-                <Button size="sm" className="bg-primary text-white font-semibold">All traffic</Button>
-                <Button size="sm" variant="ghost">Flow</Button>
-                <Button size="sm" variant="ghost">Incidents</Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+                 {/* Map Controls */}
+         <div className="absolute top-6 left-6 z-10">
+           <Card className="p-4 bg-white/90 backdrop-blur-lg shadow-xl border-0">
+             <CardContent className="p-0">
+               <div className="flex gap-2">
+                 <Button 
+                   size="sm" 
+                   className={trafficView === 'all' ? 'bg-primary text-white font-semibold' : 'bg-gray-100 hover:bg-gray-200'}
+                   onClick={() => setTrafficView('all')}
+                 >
+                   All traffic
+                 </Button>
+                 <Button 
+                   size="sm" 
+                   variant="ghost"
+                   className={trafficView === 'flow' ? 'bg-primary text-white font-semibold' : ''}
+                   onClick={() => setTrafficView('flow')}
+                 >
+                   Flow
+                 </Button>
+                 <Button 
+                   size="sm" 
+                   variant="ghost"
+                   className={trafficView === 'incidents' ? 'bg-primary text-white font-semibold' : ''}
+                   onClick={() => setTrafficView('incidents')}
+                 >
+                   Incidents
+                 </Button>
+               </div>
+             </CardContent>
+           </Card>
+         </div>
 
         {/* Zoom Controls */}
         <div className="absolute top-6 right-6 z-10">
