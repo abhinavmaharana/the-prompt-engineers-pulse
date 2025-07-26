@@ -123,8 +123,8 @@ const ModalWizard = ({ latitude, longitude, onSubmit, onClose }: ModalWizardProp
         <div className="p-6 border-b border-border/50">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-lg font-semibold text-text">Report Issue</h2>
-              <p className="text-sm text-text-secondary mt-0.5">Help improve your city</p>
+              <h2 className="text-lg font-semibold text-black">Report Issue</h2>
+              <p className="text-sm text-black mt-0.5">Help improve your city</p>
             </div>
             <motion.button
               whileHover={{ scale: 1.1 }}
@@ -132,7 +132,7 @@ const ModalWizard = ({ latitude, longitude, onSubmit, onClose }: ModalWizardProp
               onClick={onClose}
               className="p-2 rounded-lg hover:bg-neutral-light transition-colors"
             >
-              <XMarkIcon className="w-5 h-5 text-text-secondary" />
+              <XMarkIcon className="w-5 h-5 text-black" />
             </motion.button>
           </div>
 
@@ -148,11 +148,11 @@ const ModalWizard = ({ latitude, longitude, onSubmit, onClose }: ModalWizardProp
                     className={`w-8 h-8 rounded-lg flex items-center justify-center shadow-soft ${
                       isActive ? 'bg-primary text-white' : 
                       isCompleted ? 'bg-success text-white' : 
-                      'bg-neutral-light text-text-secondary'
+                      'bg-neutral-light text-black'
                     }`}
                     whileHover={{ scale: 1.1 }}
                   >
-                    {isCompleted ? <CheckIcon className="w-4 h-4" /> : step.icon}
+                    {isCompleted ? <CheckIcon className="w-8 h-8 text-white bg-green-500 rounded-lg" /> : step.icon}
                   </motion.div>
                   {index < steps.length - 1 && (
                     <div className={`w-8 h-0.5 mx-2 rounded-full ${isCompleted ? 'bg-success' : 'bg-border'}`} />
@@ -178,14 +178,14 @@ const ModalWizard = ({ latitude, longitude, onSubmit, onClose }: ModalWizardProp
                 <div className="space-y-4">
                   <div className="text-center">
                     <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
-                      <MapPinIcon className="w-6 h-6 text-primary" />
+                      <MapPinIcon className="w-6 h-6 text-black" />
                     </div>
-                    <h3 className="text-base font-medium text-text mb-2">Location Confirmed</h3>
-                    <p className="text-sm text-text-secondary">We've captured the location where you clicked.</p>
+                    <h3 className="text-base font-medium text-black mb-2">Location Confirmed</h3>
+                    <p className="text-sm text-black">We've captured the location where you clicked.</p>
                   </div>
                   <div className="bg-neutral-light rounded-lg p-4 border border-border/50">
-                    <div className="text-xs font-medium text-text-secondary mb-2">📍 Coordinates</div>
-                    <div className="font-mono text-sm text-text bg-white rounded-lg p-3 shadow-soft">
+                    <div className="text-xs font-medium text-black mb-2">📍 Coordinates</div>
+                    <div className="font-mono text-sm text-black bg-white rounded-lg p-3 shadow-soft">
                       {latitude.toFixed(6)}, {longitude.toFixed(6)}
                     </div>
                   </div>
@@ -196,18 +196,18 @@ const ModalWizard = ({ latitude, longitude, onSubmit, onClose }: ModalWizardProp
                 <div className="space-y-4">
                   <div className="text-center">
                     <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
-                      <DocumentTextIcon className="w-6 h-6 text-primary" />
+                      <DocumentTextIcon className="w-6 h-6 text-black" />
                     </div>
-                    <h3 className="text-base font-medium text-text mb-2">Describe the Issue</h3>
-                    <p className="text-sm text-text-secondary">Provide details about the civic issue.</p>
+                    <h3 className="text-base font-medium text-black mb-2">Describe the Issue</h3>
+                    <p className="text-sm text-black">Provide details about the civic issue.</p>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-text mb-2">📝 Description</label>
+                    <label className="block text-xs font-medium text-black mb-2">📝 Description</label>
                     <textarea
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
                       placeholder="e.g., Large pothole causing traffic, broken street light..."
-                      className="w-full p-3 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent resize-none bg-white shadow-soft"
+                      className="w-full p-3 border text-black border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent resize-none bg-white shadow-soft"
                       rows={3}
                     />
                   </div>
@@ -220,8 +220,8 @@ const ModalWizard = ({ latitude, longitude, onSubmit, onClose }: ModalWizardProp
                     <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
                       <PhotoIcon className="w-6 h-6 text-primary" />
                     </div>
-                    <h3 className="text-base font-medium text-text mb-2">Add a Photo (Optional)</h3>
-                    <p className="text-sm text-text-secondary">A picture helps us understand the issue better.</p>
+                    <h3 className="text-base font-medium text-black mb-2">Add a Photo (Optional)</h3>
+                    <p className="text-sm text-black">A picture helps us understand the issue better.</p>
                   </div>
                   
                   <motion.div
@@ -250,7 +250,7 @@ const ModalWizard = ({ latitude, longitude, onSubmit, onClose }: ModalWizardProp
                         />
                         <button
                           onClick={() => fileInputRef.current?.click()}
-                          className="text-primary hover:text-primary-hover font-medium text-sm"
+                          className="text-black hover:text-primary-hover font-medium text-sm"
                         >
                           Change Photo
                         </button>
@@ -258,18 +258,18 @@ const ModalWizard = ({ latitude, longitude, onSubmit, onClose }: ModalWizardProp
                     ) : (
                       <div className="space-y-3">
                         <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto">
-                          <PhotoIcon className="w-6 h-6 text-primary" />
+                          <PhotoIcon className="w-6 h-6 text-black" />
                         </div>
                         <div>
                           <button
                             onClick={() => fileInputRef.current?.click()}
-                            className="text-primary hover:text-primary-hover font-medium text-sm"
+                            className="text-black hover:text-primary-hover font-medium text-sm"
                           >
                             Click to upload
                           </button>
-                          <span className="text-text-secondary text-sm"> or drag and drop</span>
+                          <span className="text-black text-sm"> or drag and drop</span>
                         </div>
-                        <p className="text-xs text-text-muted">PNG, JPG up to 10MB</p>
+                        <p className="text-xs text-black">PNG, JPG up to 10MB</p>
                       </div>
                     )}
                   </motion.div>
@@ -282,24 +282,24 @@ const ModalWizard = ({ latitude, longitude, onSubmit, onClose }: ModalWizardProp
                     <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
                       <CheckIcon className="w-6 h-6 text-primary" />
                     </div>
-                    <h3 className="text-base font-medium text-text mb-2">Confirm Report</h3>
-                    <p className="text-sm text-text-secondary">Please review your report before submitting.</p>
+                    <h3 className="text-base font-medium text-black mb-2">Confirm Report</h3>
+                    <p className="text-sm text-black">Please review your report before submitting.</p>
                   </div>
                   
                   <div className="space-y-3">
                     <div className="bg-neutral-light rounded-lg p-4 border border-border/50">
-                      <div className="text-xs font-medium text-text-secondary mb-2">📝 Description</div>
-                      <div className="text-text bg-white rounded-lg p-3 shadow-soft text-sm">{description}</div>
+                      <div className="text-xs font-medium text-black mb-2">📝 Description</div>
+                      <div className="text-black bg-white rounded-lg p-3 shadow-soft text-sm">{description}</div>
                     </div>
                     
                     <div className="bg-neutral-light rounded-lg p-4 border border-border/50">
-                      <div className="text-xs font-medium text-text-secondary mb-2">📍 Location</div>
-                      <div className="font-mono text-text bg-white rounded-lg p-3 shadow-soft text-sm">{latitude.toFixed(6)}, {longitude.toFixed(6)}</div>
+                      <div className="text-xs font-medium text-black mb-2">📍 Location</div>
+                      <div className="font-mono text-black bg-white rounded-lg p-3 shadow-soft text-sm">{latitude.toFixed(6)}, {longitude.toFixed(6)}</div>
                     </div>
                     
                     {imagePreview && (
                       <div className="bg-neutral-light rounded-lg p-4 border border-border/50">
-                        <div className="text-xs font-medium text-text-secondary mb-2">📸 Photo</div>
+                        <div className="text-xs font-medium text-black mb-2">📸 Photo</div>
                         <img
                           src={imagePreview}
                           alt="Preview"
@@ -323,8 +323,8 @@ const ModalWizard = ({ latitude, longitude, onSubmit, onClose }: ModalWizardProp
             disabled={currentStep === 'location'}
             className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors ${
               currentStep === 'location'
-                ? 'text-text-muted cursor-not-allowed'
-                : 'text-text hover:bg-neutral-light'
+                ? 'text-black cursor-not-allowed'
+                : 'text-black hover:bg-neutral-light'
             }`}
           >
             <ArrowLeftIcon className="w-4 h-4" />
@@ -338,8 +338,8 @@ const ModalWizard = ({ latitude, longitude, onSubmit, onClose }: ModalWizardProp
             disabled={!canProceed()}
             className={`flex items-center gap-2 px-6 py-2.5 rounded-lg font-medium transition-all duration-200 shadow-soft ${
               canProceed()
-                ? 'bg-primary hover:bg-primary-hover text-white hover:shadow-medium'
-                : 'bg-border text-text-muted cursor-not-allowed'
+                ? 'bg-primary hover:bg-primary-hover text-black hover:shadow-medium'
+                : 'bg-border text-black cursor-not-allowed'
             }`}
           >
             {currentStep === 'confirm' ? 'Submit Report' : 'Next'}
