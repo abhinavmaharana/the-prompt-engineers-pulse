@@ -1,7 +1,10 @@
+import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { ArrowRightIcon, PlusIcon } from '@heroicons/react/24/outline'
+import { ArrowRightIcon, PlusIcon, EyeIcon } from '@heroicons/react/24/outline'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import ImageAnalysisDisplay from './ImageAnalysisDisplay'
 import type { Report } from '../App'
 
 interface FeedProps {
@@ -10,6 +13,18 @@ interface FeedProps {
 }
 
 const Feed = ({ reports, onFocusReport }: FeedProps) => {
+  const [expandedReports, setExpandedReports] = useState<Set<string>>(new Set())
+
+  const toggleAnalysis = (reportId: string) => {
+    const newExpanded = new Set(expandedReports)
+    if (newExpanded.has(reportId)) {
+      newExpanded.delete(reportId)
+    } else {
+      newExpanded.add(reportId)
+    }
+    setExpandedReports(newExpanded)
+  }
+
   return (
     <div className="w-full bg-transparent">
       <div className="p-4 space-y-4">
@@ -80,8 +95,7 @@ const Feed = ({ reports, onFocusReport }: FeedProps) => {
               transition={{ delay: idx * 0.05, duration: 0.4, type: 'spring' }}
             >
               <Card 
-                className="hover:shadow-xl hover:scale-[1.02] transition-all duration-300 cursor-pointer group bg-white/80 backdrop-blur-sm border-0 shadow-md"
-                onClick={() => onFocusReport(report.id)}
+                className="hover:shadow-xl hover:scale-[1.02] transition-all duration-300 group bg-white/80 backdrop-blur-sm border-0 shadow-md"
               >
                 <CardContent className="p-5">
                   <div className="flex items-start gap-4">
@@ -94,21 +108,64 @@ const Feed = ({ reports, onFocusReport }: FeedProps) => {
                       <div className="flex items-center gap-3 mb-2">
                         <h4 className="font-bold text-gray-800 text-base truncate">{report.description}</h4>
                         <div className="w-2 h-2 bg-red-500 rounded-full shadow-sm"></div>
+                        {report.imageAnalysis?.predictions?.issueType && (
+                          <Badge 
+                            variant="outline" 
+                            className="text-xs bg-blue-50 text-blue-700 border-blue-200"
+                          >
+                            AI Analyzed
+                          </Badge>
+                        )}
                       </div>
                       <div className="flex items-center gap-4 text-sm text-gray-600 font-medium">
                         <span className="flex items-center gap-1">📍 Bengaluru</span>
                         <span className="flex items-center gap-1">🕒 {report.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        {report.imageAnalysis?.predictions?.issueType && (
+                          <span className="flex items-center gap-1">
+                            🎯 {report.imageAnalysis.predictions.issueType}
+                          </span>
+                        )}
                       </div>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="flex-shrink-0 h-10 w-10 rounded-xl hover:bg-red-50 group-hover:bg-red-50"
-                      aria-label="Focus map on report"
-                    >
-                      <ArrowRightIcon className="w-5 h-5 text-gray-600 group-hover:text-red-600 transition-colors" />
-                    </Button>
+                    <div className="flex flex-col gap-2">
+                      {report.imageAnalysis?.predictions?.issueType && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="flex-shrink-0 h-8 w-8 rounded-lg hover:bg-blue-50"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            toggleAnalysis(report.id)
+                          }}
+                          aria-label="Toggle AI analysis"
+                        >
+                          <EyeIcon className="w-4 h-4 text-blue-600" />
+                        </Button>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="flex-shrink-0 h-8 w-8 rounded-lg hover:bg-red-50"
+                        onClick={() => onFocusReport(report.id)}
+                        aria-label="Focus map on report"
+                      >
+                        <ArrowRightIcon className="w-4 h-4 text-gray-600 group-hover:text-red-600 transition-colors" />
+                      </Button>
+                    </div>
                   </div>
+                  
+                  {/* AI Analysis Display */}
+                  {report.imageAnalysis?.predictions?.issueType && expandedReports.has(report.id) && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="mt-4 pt-4 border-t border-gray-100"
+                    >
+                      <ImageAnalysisDisplay analysis={report.imageAnalysis} />
+                    </motion.div>
+                  )}
                 </CardContent>
               </Card>
             </motion.div>

@@ -11,7 +11,8 @@
     "deploy": "npm run build && firebase deploy",
     "deploy:hosting": "npm run build && firebase deploy --only hosting",
     "deploy:firestore": "firebase deploy --only firestore",
-    "deploy:storage": "firebase deploy --only storage"
+    "deploy:storage": "firebase deploy --only storage",
+    "serve": "npm run build && firebase serve"
   },
   "dependencies": {
     "@googlemaps/js-api-loader": "^1.16.10",

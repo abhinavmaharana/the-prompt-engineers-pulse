@@ -3,7 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 const LiveTraffic = () => {
   const [currentTime, setCurrentTime] = useState(new Date())
-  const [trafficUpdates, setTrafficUpdates] = useState({
+  const [trafficUpdates, setTrafficUpdates] = useState<{
+    alerts: string[]
+    events: string[]
+    news: string[]
+  }>({
     alerts: [],
     events: [],
     news: []

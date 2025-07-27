@@ -7,7 +7,8 @@ import {
   CheckIcon,
   ArrowLeftIcon,
   ArrowRightIcon,
-  MagnifyingGlassIcon
+  MagnifyingGlassIcon,
+  PhoneIcon
 } from '@heroicons/react/24/outline'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,11 +16,11 @@ import { Input } from '@/components/ui/input'
 interface ModalWizardProps {
   latitude: number
   longitude: number
-  onSubmit: (description: string, image?: File) => void
+  onSubmit: (description: string, image?: File, callbackInfo?: { phoneNumber: string; requestCallback: boolean }) => void
   onClose: () => void
 }
 
-type Step = 'location' | 'details' | 'confirm'
+type Step = 'location' | 'details' | 'callback' | 'confirm'
 
 const ModalWizard = ({ latitude, longitude, onSubmit, onClose }: ModalWizardProps) => {
   const [currentStep, setCurrentStep] = useState<Step>('location')
@@ -31,12 +32,15 @@ const ModalWizard = ({ latitude, longitude, onSubmit, onClose }: ModalWizardProp
   const [manualLocation, setManualLocation] = useState('')
   const [locationSuggestions, setLocationSuggestions] = useState<{ place_id: string; description: string }[]>([])
   const [showLocationSuggestions, setShowLocationSuggestions] = useState(false)
+  const [phoneNumber, setPhoneNumber] = useState('')
+  const [requestCallback, setRequestCallback] = useState(false)
   const locationTimeoutRef = useRef<number | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const steps: { key: Step; title: string; icon: React.ReactNode }[] = [
     { key: 'location', title: 'Location', icon: <MapPinIcon className="w-5 h-5" /> },
     { key: 'details', title: 'Details', icon: <PhotoIcon className="w-5 h-5" /> },
+    { key: 'callback', title: 'Callback', icon: <PhoneIcon className="w-5 h-5" /> },
     { key: 'confirm', title: 'Confirm', icon: <CheckIcon className="w-5 h-5" /> }
   ]
 
@@ -77,7 +81,8 @@ const ModalWizard = ({ latitude, longitude, onSubmit, onClose }: ModalWizardProp
   }
 
   const handleSubmit = () => {
-    onSubmit(description.trim(), selectedImage || undefined)
+    const callbackInfo = requestCallback ? { phoneNumber, requestCallback } : undefined
+    onSubmit(description.trim(), selectedImage || undefined, callbackInfo)
   }
 
   const nextStep = () => {
@@ -100,6 +105,8 @@ const ModalWizard = ({ latitude, longitude, onSubmit, onClose }: ModalWizardProp
         return locationType === 'coordinates' || (locationType === 'manual' && manualLocation.trim().length > 0)
       case 'details':
         return selectedImage !== null // Photo is mandatory
+      case 'callback':
+        return !requestCallback || (requestCallback && phoneNumber.trim().length >= 10) // Phone number validation
       case 'confirm':
         return true
       default:
@@ -398,6 +405,74 @@ const ModalWizard = ({ latitude, longitude, onSubmit, onClose }: ModalWizardProp
                        </div>
                      )}
 
+                     {currentStep === 'callback' && (
+                       <div className="space-y-4">
+                         <div className="text-center">
+                           <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
+                             <PhoneIcon className="w-6 h-6 text-primary" />
+                           </div>
+                           <h3 className="text-base font-medium text-black mb-2">Request Callback</h3>
+                           <p className="text-sm text-black">Would you like us to call you about this issue?</p>
+                         </div>
+
+                         <div className="space-y-4">
+                           {/* Callback Toggle */}
+                           <div className="bg-white rounded-lg p-4 border shadow-soft">
+                             <div className="flex items-center justify-between">
+                               <div>
+                                 <h4 className="font-medium text-black">Request Phone Call</h4>
+                                 <p className="text-sm text-gray-600">Get a call from our traffic assistant</p>
+                               </div>
+                               <label className="relative inline-flex items-center cursor-pointer">
+                                 <input
+                                   type="checkbox"
+                                   checked={requestCallback}
+                                   onChange={(e) => setRequestCallback(e.target.checked)}
+                                   className="sr-only peer"
+                                 />
+                                 <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                               </label>
+                             </div>
+                           </div>
+
+                           {/* Phone Number Input */}
+                           {requestCallback && (
+                             <div className="space-y-3">
+                               <label className="block text-xs font-medium text-black mb-2">📞 Phone Number</label>
+                               <Input
+                                 type="tel"
+                                 value={phoneNumber}
+                                 onChange={(e) => setPhoneNumber(e.target.value)}
+                                 placeholder="Enter your phone number (e.g., +91 98765 43210)"
+                                 className="w-full p-3 border text-black rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white shadow-soft"
+                               />
+                               <p className="text-xs text-gray-600">
+                                 We'll call you within 30 minutes to discuss your report
+                               </p>
+                               {phoneNumber && phoneNumber.length < 10 && (
+                                 <p className="text-xs text-red-500 font-medium">
+                                   Please enter a valid phone number (at least 10 digits)
+                                 </p>
+                               )}
+                             </div>
+                           )}
+
+                           {/* Callback Benefits */}
+                           {requestCallback && (
+                             <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                               <h4 className="font-medium text-blue-800 mb-2">What to expect:</h4>
+                               <ul className="text-sm text-blue-700 space-y-1">
+                                 <li>• Confirmation of your report details</li>
+                                 <li>• Estimated response time from authorities</li>
+                                 <li>• Additional information if needed</li>
+                                 <li>• Follow-up on resolution status</li>
+                               </ul>
+                             </div>
+                           )}
+                         </div>
+                       </div>
+                     )}
+
               
 
               {currentStep === 'confirm' && (
@@ -431,6 +506,19 @@ const ModalWizard = ({ latitude, longitude, onSubmit, onClose }: ModalWizardProp
                           alt="Preview"
                           className="w-full h-24 object-cover rounded-lg shadow-soft"
                         />
+                      </div>
+                    )}
+                    
+                    {requestCallback && (
+                      <div className="bg-neutral-light rounded-lg p-4 border">
+                        <div className="text-xs font-medium text-black mb-2">📞 Callback Request</div>
+                        <div className="text-black bg-white rounded-lg p-3 shadow-soft text-sm">
+                          <div className="flex items-center gap-2 mb-1">
+                            <PhoneIcon className="w-4 h-4 text-green-600" />
+                            <span className="font-medium">Phone Call Requested</span>
+                          </div>
+                          <div className="text-gray-600">{phoneNumber}</div>
+                        </div>
                       </div>
                     )}
                   </div>

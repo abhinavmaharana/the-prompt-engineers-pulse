@@ -13,9 +13,10 @@ import LiveTraffic from './components/LiveTraffic'
 import MoodFilter from './components/MoodFilter'
 import MoodAnalytics from './components/MoodAnalytics'
 import PredictiveAnalytics from './components/PredictiveAnalytics'
+import ServiceStatus from './components/ServiceStatus'
 import { analyzeSentiment } from './utils/sentimentAnalysis'
-import { addReport, getReports } from './services/firestoreService'
-import { uploadImage } from './services/storageService'
+import { ServiceWrapper } from './services/serviceWrapper'
+import { CallbackServiceWrapper } from './services/callbackService'
 
 // WhatsApp Icon Component
 const WhatsAppIcon = ({ className }: { className?: string }) => (
@@ -44,6 +45,24 @@ export interface Report {
     keywords: string[]
     emotion: string
   }
+  imageAnalysis?: {
+    content: string[]
+    confidence: number
+    categories: string[]
+    severity: 'low' | 'medium' | 'high' | 'critical'
+    predictions: {
+      issueType: string
+      urgency: number
+      estimatedResponseTime: string
+      recommendedActions: string[]
+    }
+    metadata: {
+      fileSize: number
+      dimensions: { width: number; height: number }
+      format: string
+      uploadTime: Date
+    }
+  }
 }
 
 function App() {
@@ -63,7 +82,7 @@ function App() {
     setIsModalOpen(true)
   }
 
-  const handleSubmitReport = async (description: string, image?: File) => {
+  const handleSubmitReport = async (description: string, image?: File, callbackInfo?: { phoneNumber: string; requestCallback: boolean }) => {
     if (selectedLocation) {
       try {
         // Analyze sentiment of the report
@@ -78,19 +97,62 @@ function App() {
           sentiment
         }
         
-        // Add report to Firestore
-        const savedReport = await addReport(reportData)
+        // Add report using service wrapper
+        const savedReport = await ServiceWrapper.addReport(reportData)
         
-        // Upload image if provided
-        let imageUrl: string | undefined
+        // Upload image with AI analysis if provided
+        let finalReport = savedReport
+        
         if (image) {
-          imageUrl = await uploadImage(image, savedReport.id)
-          // Update report with image URL
-          await addReport({ ...reportData, imageUrl })
+          try {
+            const uploadResult = await ServiceWrapper.uploadImageWithAnalysis(image, savedReport.id, description)
+            
+            // Create updated report with image analysis
+            finalReport = {
+              ...savedReport,
+              imageUrl: uploadResult.imageUrl,
+              imageAnalysis: uploadResult.analysis
+            }
+            
+            // Update the report in the service
+            await ServiceWrapper.addReport({ 
+              ...reportData, 
+              imageUrl: uploadResult.imageUrl, 
+              imageAnalysis: uploadResult.analysis
+            })
+          } catch (error) {
+            console.error('Error uploading image with analysis:', error)
+            // Fallback is handled by ServiceWrapper
+          }
         }
         
-        // Update local state
-        setReports(prev => [savedReport, ...prev])
+        // Update local state with the final report (including image analysis if available)
+        console.log('Final report with analysis:', finalReport)
+        setReports(prev => [finalReport, ...prev])
+        
+        // Handle callback request if requested
+        if (callbackInfo?.requestCallback && callbackInfo.phoneNumber) {
+          try {
+            console.log('Requesting callback for report:', finalReport.id)
+            const callbackResponse = await CallbackServiceWrapper.requestCallback({
+              phoneNumber: callbackInfo.phoneNumber,
+              reportId: finalReport.id,
+              description: finalReport.description,
+              location: `${finalReport.latitude}, ${finalReport.longitude}`,
+              issueType: finalReport.imageAnalysis?.predictions?.issueType || 'Traffic Issue',
+              urgency: finalReport.imageAnalysis?.predictions?.urgency || 50
+            })
+            
+            console.log('Callback scheduled successfully:', callbackResponse)
+            // Show success notification
+            alert(`✅ Callback scheduled! We'll call you at ${callbackInfo.phoneNumber} in 5 minutes.`)
+          } catch (error) {
+            console.error('Error scheduling callback:', error)
+            // Show error notification but don't fail the report submission
+            alert('⚠️ Report submitted successfully, but callback scheduling failed. We\'ll contact you through other means.')
+          }
+        }
+        
         setIsModalOpen(false)
         setSelectedLocation(null)
       } catch (error) {
@@ -132,7 +194,7 @@ function App() {
   useEffect(() => {
     const loadReports = async () => {
       try {
-        const firestoreReports = await getReports()
+        const firestoreReports = await ServiceWrapper.getReports()
         setReports(firestoreReports)
       } catch (error) {
         console.error('Error loading reports:', error)
@@ -144,7 +206,25 @@ function App() {
             latitude: 12.9716,
             longitude: 77.5946,
             timestamp: new Date(),
-            sentiment: analyzeSentiment('Large pothole causing traffic congestion - very frustrated with this terrible road condition')
+            sentiment: analyzeSentiment('Large pothole causing traffic congestion - very frustrated with this terrible road condition'),
+            imageAnalysis: {
+              content: ['road damage', 'infrastructure issue'],
+              confidence: 0.85,
+              categories: ['infrastructure', 'road'],
+              severity: 'medium',
+              predictions: {
+                issueType: 'Road Damage',
+                urgency: 65,
+                estimatedResponseTime: 'High Priority (2-6 hours)',
+                recommendedActions: ['Assess damage severity', 'Schedule repair work', 'Install warning signs']
+              },
+              metadata: {
+                fileSize: 1024000,
+                dimensions: { width: 1920, height: 1080 },
+                format: 'image/jpeg',
+                uploadTime: new Date()
+              }
+            }
           },
           {
             id: '2',
@@ -152,7 +232,25 @@ function App() {
             latitude: 12.9789,
             longitude: 77.5917,
             timestamp: new Date(Date.now() - 300000),
-            sentiment: analyzeSentiment('Traffic accident on main road - concerned about safety')
+            sentiment: analyzeSentiment('Traffic accident on main road - concerned about safety'),
+            imageAnalysis: {
+              content: ['traffic incident', 'emergency situation'],
+              confidence: 0.92,
+              categories: ['safety', 'emergency'],
+              severity: 'critical',
+              predictions: {
+                issueType: 'Traffic Incident',
+                urgency: 90,
+                estimatedResponseTime: 'Immediate (0-2 hours)',
+                recommendedActions: ['Immediate response required', 'Dispatch emergency services', 'Set up traffic diversion', 'Notify traffic police']
+              },
+              metadata: {
+                fileSize: 2048000,
+                dimensions: { width: 1920, height: 1080 },
+                format: 'image/jpeg',
+                uploadTime: new Date()
+              }
+            }
           },
           {
             id: '3',
@@ -160,7 +258,25 @@ function App() {
             latitude: 12.9655,
             longitude: 77.5855,
             timestamp: new Date(Date.now() - 600000),
-            sentiment: analyzeSentiment('Heavy traffic jam near mall - stuck here for hours')
+            sentiment: analyzeSentiment('Heavy traffic jam near mall - stuck here for hours'),
+            imageAnalysis: {
+              content: ['traffic congestion', 'road blockage'],
+              confidence: 0.78,
+              categories: ['traffic', 'congestion'],
+              severity: 'high',
+              predictions: {
+                issueType: 'Traffic Congestion',
+                urgency: 75,
+                estimatedResponseTime: 'High Priority (2-6 hours)',
+                recommendedActions: ['Analyze traffic patterns', 'Implement traffic diversion', 'Update traffic signals']
+              },
+              metadata: {
+                fileSize: 1536000,
+                dimensions: { width: 1920, height: 1080 },
+                format: 'image/jpeg',
+                uploadTime: new Date()
+              }
+            }
           }
         ])
       }
@@ -193,6 +309,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 text-text overflow-x-hidden relative">
+      <ServiceStatus />
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl animate-pulse-slow"></div>
@@ -449,44 +566,7 @@ function App() {
                    {/* Mood Analytics Section */}
                    <section className="px-6 py-8">
                      <div className="max-w-7xl mx-auto">
-                       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                         <div className="lg:col-span-2">
-                           <MoodAnalytics reports={reports} />
-                         </div>
-                         <div className="lg:col-span-1">
-                           <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg border-0">
-                             <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                               <span>📊</span>
-                               Quick Stats
-                             </h3>
-                             <div className="space-y-3">
-                               <div className="flex justify-between items-center">
-                                 <span className="text-sm text-gray-600">Total Reports</span>
-                                 <span className="font-semibold text-gray-800">{reports.length}</span>
-                               </div>
-                               <div className="flex justify-between items-center">
-                                 <span className="text-sm text-gray-600">Today's Reports</span>
-                                 <span className="font-semibold text-gray-800">
-                                   {reports.filter(r => {
-                                     const today = new Date()
-                                     const reportDate = new Date(r.timestamp)
-                                     return today.toDateString() === reportDate.toDateString()
-                                   }).length}
-                                 </span>
-                               </div>
-                               <div className="flex justify-between items-center">
-                                 <span className="text-sm text-gray-600">Avg. Sentiment</span>
-                                 <span className="font-semibold text-gray-800">
-                                   {reports.length > 0 ? 
-                                     (reports.reduce((sum, r) => sum + (r.sentiment?.score || 0), 0) / reports.length).toFixed(2) : 
-                                     '0.00'
-                                   }
-                                 </span>
-                               </div>
-                             </div>
-                           </div>
-                         </div>
-                       </div>
+                       <MoodAnalytics reports={reports} />
                      </div>
                    </section>
 
