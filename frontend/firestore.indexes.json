@@ -1,0 +1,29 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "traffic_reports",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "sentiment.mood",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "timestamp",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "traffic_reports",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "timestamp",
+          "order": "DESCENDING"
+        }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+} 

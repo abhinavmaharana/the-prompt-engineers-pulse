@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { PlusIcon, MinusIcon } from '@heroicons/react/24/outline'
 import { Button } from '@/components/ui/button'
@@ -12,7 +12,10 @@ import RoutePlannerSection from './components/RoutePlannerSection'
 import LiveTraffic from './components/LiveTraffic'
 import MoodFilter from './components/MoodFilter'
 import MoodAnalytics from './components/MoodAnalytics'
+import PredictiveAnalytics from './components/PredictiveAnalytics'
 import { analyzeSentiment } from './utils/sentimentAnalysis'
+import { addReport, getReports } from './services/firestoreService'
+import { uploadImage } from './services/storageService'
 
 // WhatsApp Icon Component
 const WhatsAppIcon = ({ className }: { className?: string }) => (
@@ -32,6 +35,7 @@ export interface Report {
   longitude: number
   description: string
   image?: File
+  imageUrl?: string
   timestamp: Date
   sentiment?: {
     mood: 'positive' | 'negative' | 'neutral' | 'frustrated' | 'concerned' | 'satisfied'
@@ -43,48 +47,8 @@ export interface Report {
 }
 
 function App() {
-  const [reports, setReports] = useState<Report[]>([
-    {
-      id: '1',
-      description: 'Large pothole causing traffic congestion - very frustrated with this terrible road condition',
-      latitude: 12.9716,
-      longitude: 77.5946,
-      timestamp: new Date(),
-      sentiment: analyzeSentiment('Large pothole causing traffic congestion - very frustrated with this terrible road condition')
-    },
-    {
-      id: '2',
-      description: 'Traffic accident on main road - concerned about safety',
-      latitude: 12.9789,
-      longitude: 77.5917,
-      timestamp: new Date(Date.now() - 300000), // 5 minutes ago
-      sentiment: analyzeSentiment('Traffic accident on main road - concerned about safety')
-    },
-    {
-      id: '3',
-      description: 'Heavy traffic jam near mall - stuck here for hours',
-      latitude: 12.9655,
-      longitude: 77.5855,
-      timestamp: new Date(Date.now() - 600000), // 10 minutes ago
-      sentiment: analyzeSentiment('Heavy traffic jam near mall - stuck here for hours')
-    },
-    {
-      id: '4',
-      description: 'Road incident blocking traffic - this is getting ridiculous',
-      latitude: 12.9833,
-      longitude: 77.5833,
-      timestamp: new Date(Date.now() - 900000), // 15 minutes ago
-      sentiment: analyzeSentiment('Road incident blocking traffic - this is getting ridiculous')
-    },
-    {
-      id: '5',
-      description: 'Great news! Construction work completed and traffic is flowing smoothly now',
-      latitude: 12.9700,
-      longitude: 77.5900,
-      timestamp: new Date(Date.now() - 1200000), // 20 minutes ago
-      sentiment: analyzeSentiment('Great news! Construction work completed and traffic is flowing smoothly now')
-    }
-  ])
+  const [reports, setReports] = useState<Report[]>([])
+
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [focusedReportId, setFocusedReportId] = useState<string | null>(null)
@@ -99,23 +63,40 @@ function App() {
     setIsModalOpen(true)
   }
 
-  const handleSubmitReport = (description: string, image?: File) => {
+  const handleSubmitReport = async (description: string, image?: File) => {
     if (selectedLocation) {
-      // Analyze sentiment of the report
-      const sentiment = analyzeSentiment(description)
-      
-      const newReport: Report = {
-        id: Date.now().toString(),
-        latitude: selectedLocation.lat,
-        longitude: selectedLocation.lng,
-        description,
-        image,
-        timestamp: new Date(),
-        sentiment
+      try {
+        // Analyze sentiment of the report
+        const sentiment = analyzeSentiment(description)
+        
+        // Create report object without ID (Firestore will generate it)
+        const reportData = {
+          latitude: selectedLocation.lat,
+          longitude: selectedLocation.lng,
+          description,
+          timestamp: new Date(),
+          sentiment
+        }
+        
+        // Add report to Firestore
+        const savedReport = await addReport(reportData)
+        
+        // Upload image if provided
+        let imageUrl: string | undefined
+        if (image) {
+          imageUrl = await uploadImage(image, savedReport.id)
+          // Update report with image URL
+          await addReport({ ...reportData, imageUrl })
+        }
+        
+        // Update local state
+        setReports(prev => [savedReport, ...prev])
+        setIsModalOpen(false)
+        setSelectedLocation(null)
+      } catch (error) {
+        console.error('Error submitting report:', error)
+        // Handle error (show notification, etc.)
       }
-      setReports(prev => [newReport, ...prev])
-      setIsModalOpen(false)
-      setSelectedLocation(null)
     }
   }
 
@@ -146,6 +127,47 @@ function App() {
   const handleMoodFilterChange = (mood: 'all' | 'positive' | 'negative' | 'frustrated' | 'concerned' | 'satisfied' | 'neutral') => {
     setMoodFilter(mood)
   }
+
+  // Load reports from Firestore on component mount
+  useEffect(() => {
+    const loadReports = async () => {
+      try {
+        const firestoreReports = await getReports()
+        setReports(firestoreReports)
+      } catch (error) {
+        console.error('Error loading reports:', error)
+        // Fallback to sample data if Firestore fails
+        setReports([
+          {
+            id: '1',
+            description: 'Large pothole causing traffic congestion - very frustrated with this terrible road condition',
+            latitude: 12.9716,
+            longitude: 77.5946,
+            timestamp: new Date(),
+            sentiment: analyzeSentiment('Large pothole causing traffic congestion - very frustrated with this terrible road condition')
+          },
+          {
+            id: '2',
+            description: 'Traffic accident on main road - concerned about safety',
+            latitude: 12.9789,
+            longitude: 77.5917,
+            timestamp: new Date(Date.now() - 300000),
+            sentiment: analyzeSentiment('Traffic accident on main road - concerned about safety')
+          },
+          {
+            id: '3',
+            description: 'Heavy traffic jam near mall - stuck here for hours',
+            latitude: 12.9655,
+            longitude: 77.5855,
+            timestamp: new Date(Date.now() - 600000),
+            sentiment: analyzeSentiment('Heavy traffic jam near mall - stuck here for hours')
+          }
+        ])
+      }
+    }
+
+    loadReports()
+  }, [])
 
   const handleMapReady = (map: google.maps.Map) => {
     mapRef.current = map
@@ -417,6 +439,13 @@ function App() {
          )}
       </section>
 
+                   {/* Predictive Analytics Section */}
+                   <section className="px-6 py-8">
+                     <div className="max-w-7xl mx-auto">
+                       <PredictiveAnalytics />
+                     </div>
+                   </section>
+
                    {/* Mood Analytics Section */}
                    <section className="px-6 py-8">
                      <div className="max-w-7xl mx-auto">
@@ -436,7 +465,7 @@ function App() {
                                  <span className="font-semibold text-gray-800">{reports.length}</span>
                                </div>
                                <div className="flex justify-between items-center">
-                                 <span className="text-sm text-gray-800">Today's Reports</span>
+                                 <span className="text-sm text-gray-600">Today's Reports</span>
                                  <span className="font-semibold text-gray-800">
                                    {reports.filter(r => {
                                      const today = new Date()
