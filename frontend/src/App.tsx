@@ -482,7 +482,7 @@ function App() {
         <Button 
           size="lg"
           className="bg-green-500 hover:bg-green-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 p-4"
-          onClick={() => window.open('https://wa.me/919876543210?text=Hi! I need help with traffic reporting on CityPulse.', '_blank')}
+          onClick={() => window.open('https://wa.me/14155238886?text=Hi! I need help with traffic reporting on CityPulse.', '_blank')}
           aria-label="Contact via WhatsApp"
         >
           <WhatsAppIcon className="w-6 h-6" />
