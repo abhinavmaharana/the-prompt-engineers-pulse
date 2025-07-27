@@ -76,10 +76,11 @@ const generateTaskDescription = (data: CallbackRequest): string => {
 Start the call politely. Confirm if they are safe and if this is a good time to speak. Then, based on the image and location data, offer the following:
 
 1. Ask what kind of help they need: medical, towing, police assistance, or just reporting the issue.
-2. If it's an emergency, offer to contact the appropriate local service (like Bengaluru traffic police, ambulance, or breakdown service).
-3. If they are simply reporting, thank them and assure them the issue will be passed on to authorities.
-4. Speak naturally, don't sound robotic. Use a warm, understanding tone.
-5. If they need nothing else, end the call politely, wishing them a safe day.
+2. Ask if you are alright or not.
+3. If it's an emergency, offer to contact the appropriate local service (like Bengaluru traffic police, ambulance, or breakdown service).
+4. If they are simply reporting, thank them and assure them the issue will be passed on to authorities.
+5. Speak naturally, don't sound robotic. Use a warm, understanding tone.
+6. If they need nothing else, end the call politely, wishing them a safe day.
 
 Report details: ${data.description}. Location: ${data.location}.${data.issueType ? ` Issue type: ${data.issueType}.` : ''}
 

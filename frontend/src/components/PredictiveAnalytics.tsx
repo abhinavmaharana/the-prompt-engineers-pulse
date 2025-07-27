@@ -21,7 +21,9 @@ const PredictiveAnalytics = () => {
   const [notifications, setNotifications] = useState<IntelligentNotification[]>([])
   const [areaSummaries, setAreaSummaries] = useState<AIGeneratedSummary[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const [selectedArea, setSelectedArea] = useState('HSR Layout')
+  const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null)
 
   const areas = ['HSR Layout', 'Koramangala', 'Indiranagar', 'Whitefield', 'Electronic City']
 
@@ -29,9 +31,13 @@ const PredictiveAnalytics = () => {
     loadPredictiveData()
   }, [])
 
-  const loadPredictiveData = async () => {
+  const loadPredictiveData = async (isRefresh = false) => {
     try {
-      setIsLoading(true)
+      if (isRefresh) {
+        setIsRefreshing(true)
+      } else {
+        setIsLoading(true)
+      }
       
       // Load all predictive data
       const [alertsData, patternsData, notificationsData] = await Promise.all([
@@ -50,11 +56,13 @@ const PredictiveAnalytics = () => {
       )
       console.log('Generated area summaries:', summaries.map(s => ({ area: s.area, id: s.id })))
       setAreaSummaries(summaries)
+      setLastRefreshed(new Date())
       
     } catch (error) {
       console.error('Error loading predictive data:', error)
     } finally {
       setIsLoading(false)
+      setIsRefreshing(false)
     }
   }
 
@@ -76,6 +84,18 @@ const PredictiveAnalytics = () => {
       case 'low': return 'bg-green-100 text-green-800'
       default: return 'bg-gray-100 text-gray-800'
     }
+  }
+
+  const handleAreaSelection = (area: string) => {
+    console.log('Selecting area:', area)
+    console.log('Current selected area before:', selectedArea)
+    setSelectedArea(area)
+    console.log('Area selection triggered for:', area)
+  }
+
+  const handleRefresh = () => {
+    console.log('Refreshing intelligence data...')
+    loadPredictiveData(true)
   }
 
   if (isLoading) {
@@ -184,14 +204,19 @@ const PredictiveAnalytics = () => {
           <div className="mb-4">
             <div className="flex flex-wrap gap-2">
               {areas.map(area => (
-                <Button
+                <button
                   key={area}
-                  variant={selectedArea === area ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setSelectedArea(area)}
+                  type="button"
+                  onClick={() => handleAreaSelection(area)}
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer relative z-10 ${
+                    selectedArea === area 
+                      ? 'bg-green-600 hover:bg-green-700 text-white border border-green-600' 
+                      : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-300'
+                  }`}
+                  style={{ pointerEvents: 'auto' }}
                 >
                   {area}
-                </Button>
+                </button>
               ))}
             </div>
           </div>
@@ -201,6 +226,17 @@ const PredictiveAnalytics = () => {
             console.log('Available summaries:', areaSummaries.map(s => s.area))
             const currentSummary = areaSummaries.find(summary => summary.area === selectedArea)
             console.log('Current summary found:', !!currentSummary)
+            
+            if (areaSummaries.length === 0) {
+              return (
+                <div className="bg-white rounded-lg p-6 border border-green-200">
+                  <div className="text-center text-gray-500">
+                    <div className="w-8 h-8 border-4 border-green-200 border-t-green-500 rounded-full animate-spin mx-auto mb-4"></div>
+                    <p>Loading area intelligence...</p>
+                  </div>
+                </div>
+              )
+            }
             
             if (!currentSummary) {
               return (
@@ -314,10 +350,26 @@ const PredictiveAnalytics = () => {
       </Card>
 
       {/* Refresh Button */}
-      <div className="text-center">
-        <Button onClick={loadPredictiveData} className="bg-gradient-to-r from-blue-500 to-purple-600">
-          🔄 Refresh Intelligence
+      <div className="text-center space-y-2">
+        <Button 
+          onClick={handleRefresh} 
+          disabled={isRefreshing}
+          className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 disabled:opacity-50"
+        >
+          {isRefreshing ? (
+            <>
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+              Refreshing...
+            </>
+          ) : (
+            '🔄 Refresh Intelligence'
+          )}
         </Button>
+        {lastRefreshed && (
+          <p className="text-xs text-gray-500">
+            Last updated: {lastRefreshed.toLocaleTimeString()}
+          </p>
+        )}
       </div>
     </div>
   )
