@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { ArrowRightIcon, PlusIcon, EyeIcon } from '@heroicons/react/24/outline'
+import { ArrowRightIcon, PlusIcon, EyeIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -14,6 +14,8 @@ interface FeedProps {
 
 const Feed = ({ reports, onFocusReport }: FeedProps) => {
   const [expandedReports, setExpandedReports] = useState<Set<string>>(new Set())
+  const [currentPage, setCurrentPage] = useState(1)
+  const [reportsPerPage, setReportsPerPage] = useState(5)
 
   const toggleAnalysis = (reportId: string) => {
     const newExpanded = new Set(expandedReports)
@@ -23,6 +25,36 @@ const Feed = ({ reports, onFocusReport }: FeedProps) => {
       newExpanded.add(reportId)
     }
     setExpandedReports(newExpanded)
+  }
+
+  // Calculate pagination
+  const totalPages = Math.ceil(reports.length / reportsPerPage)
+  const startIndex = (currentPage - 1) * reportsPerPage
+  const endIndex = startIndex + reportsPerPage
+  const currentReports = useMemo(() => reports.slice(startIndex, endIndex), [reports, startIndex, endIndex])
+
+  const goToPage = (page: number) => {
+    setCurrentPage(page)
+    // Reset expanded reports when changing pages
+    setExpandedReports(new Set())
+  }
+
+  const handlePageSizeChange = (newPageSize: number) => {
+    setReportsPerPage(newPageSize)
+    setCurrentPage(1) // Reset to first page when changing page size
+    setExpandedReports(new Set())
+  }
+
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      goToPage(currentPage + 1)
+    }
+  }
+
+  const goToPrevPage = () => {
+    if (currentPage > 1) {
+      goToPage(currentPage - 1)
+    }
   }
 
   return (
@@ -87,7 +119,7 @@ const Feed = ({ reports, onFocusReport }: FeedProps) => {
             </motion.div>
           )}
           
-          {reports.map((report, idx) => (
+          {currentReports.map((report, idx) => (
             <motion.div
               key={report.id}
               initial={{ opacity: 0, y: 20 }}
@@ -170,6 +202,80 @@ const Feed = ({ reports, onFocusReport }: FeedProps) => {
               </Card>
             </motion.div>
           ))}
+
+          {/* Pagination Controls */}
+          {reports.length > 0 && (
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-center justify-between mt-8"
+            >
+              {/* Page Info and Size Selector */}
+              <div className="flex items-center gap-4">
+                <div className="text-sm text-gray-600 font-medium">
+                  Showing {startIndex + 1} to {Math.min(endIndex, reports.length)} of {reports.length} reports
+                </div>
+                
+                {/* Page Size Selector */}
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600">Show:</span>
+                  <select
+                    value={reportsPerPage}
+                    onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+                    className="text-sm border border-gray-300 rounded-md px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  >
+                    <option value={3}>3</option>
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={15}>15</option>
+                  </select>
+                  <span className="text-sm text-gray-600">per page</span>
+                </div>
+              </div>
+
+              {/* Pagination Buttons */}
+              {totalPages > 1 && (
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={goToPrevPage}
+                    disabled={currentPage === 1}
+                    className="flex items-center gap-1"
+                  >
+                    <ChevronLeftIcon className="w-4 h-4" />
+                    Previous
+                  </Button>
+
+                  {/* Page Numbers */}
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      <Button
+                        key={page}
+                        variant={currentPage === page ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => goToPage(page)}
+                        className="w-8 h-8 p-0"
+                      >
+                        {page}
+                      </Button>
+                    ))}
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={goToNextPage}
+                    disabled={currentPage === totalPages}
+                    className="flex items-center gap-1"
+                  >
+                    Next
+                    <ChevronRightIcon className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
+            </motion.div>
+          )}
         </div>
       </div>
     </div>
