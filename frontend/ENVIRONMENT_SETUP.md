@@ -1,61 +1,127 @@
-# Environment Setup Guide
+# Environment Variables Setup Guide
+
+This guide explains how to set up the required environment variables for the City Pulse application.
 
 ## Required Environment Variables
 
 Create a `.env` file in the `frontend` directory with the following variables:
 
-### Google Maps API Key (Required)
-```
+```env
+# Google Maps API Key (Required for map functionality)
 VITE_GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
-```
 
-### Bland AI API Key (Optional - uses fallback if not provided)
-```
+# Google Cloud Vision API Key (Required for real image analysis)
+VITE_GOOGLE_CLOUD_VISION_API_KEY=your_google_cloud_vision_api_key_here
+
+# Bland AI API Key (Required for callback functionality)
 VITE_BLAND_AI_API_KEY=org_1fb62a7f68a9a0b2519e374b689c574efd586d993b0b4147c31606b8216d5f699d050bcdcda8489ca47469
-```
 
-**Note**: The API key is already configured and will work immediately. This enables automated phone callbacks for traffic reports using Bland AI's voice assistant.
-
-### Firebase Configuration (Optional - uses default if not provided)
-```
-VITE_FIREBASE_API_KEY=your_firebase_api_key_here
-VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=your_project_id
-VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
-VITE_FIREBASE_MESSAGING_SENDER_ID=123456789
-VITE_FIREBASE_APP_ID=your_app_id
+# ElevenLabs API Key (Optional - for voice features)
+VITE_ELEVENLABS_API_KEY=your_elevenlabs_api_key_here
 ```
 
 ## How to Get API Keys
 
-### Google Maps API Key
+### 1. Google Maps API Key
 1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project or select existing one
-3. Enable Maps JavaScript API, Places API, and Directions API
+2. Create a new project or select an existing one
+3. Enable the following APIs:
+   - Maps JavaScript API
+   - Places API
+   - Directions API
+   - Geocoding API
 4. Create credentials (API Key)
-5. Restrict the key to your domain for security
+5. Restrict the API key to your domain for security
 
-### Bland AI API Key
-- The API key is already provided: `org_1fb62a7f68a9a0b2519e374b689c574efd586d993b0b4147c31606b8216d5f699d050bcdcda8489ca47469`
-- This enables automated phone callbacks for traffic reports using Bland AI's voice assistant
-- Uses the "Alena" voice with natural conversation capabilities
-- Calls are scheduled immediately and last up to 12 minutes
-- Includes safety checks and emergency assistance options
+### 2. Google Cloud Vision API Key
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Select your project
+3. Enable the Cloud Vision API
+4. Create credentials (API Key) or use the same API key as Maps
+5. The Vision API will analyze uploaded images for:
+   - Object detection (cars, roads, signs, etc.)
+   - Text detection (road signs, labels)
+   - Label detection (traffic-related content)
+   - Safe search detection
 
-### Firebase Configuration
-- Only needed if you want to use your own Firebase project
-- Otherwise, the app uses the default configuration
+### 3. Bland AI API Key
+- Already provided: `org_1fb62a7f68a9a0b2519e374b689c574efd586d993b0b4147c31606b8216d5f699d050bcdcda8489ca47469`
+- This enables automated phone callbacks for reported incidents
+
+### 4. ElevenLabs API Key (Optional)
+1. Go to [ElevenLabs](https://elevenlabs.io/)
+2. Create an account
+3. Get your API key from the dashboard
+4. Used for voice notifications and AI voice features
+
+## Features Enabled by Each API
+
+### With Google Maps API:
+- Interactive map display
+- Location selection for reports
+- Route planning
+- Traffic layer overlay
+
+### With Google Cloud Vision API:
+- **Real image analysis** (not static/simulated)
+- Automatic detection of:
+  - Traffic infrastructure (roads, signs, signals)
+  - Vehicles and traffic conditions
+  - Construction work and barriers
+  - Accidents and emergency situations
+  - Water logging and drainage issues
+  - Text on signs and labels
+- Dynamic issue type prediction
+- Accurate urgency assessment
+- Context-aware recommendations
+
+### With Bland AI API:
+- Automated phone callbacks
+- Voice-based incident follow-up
+- Emergency response coordination
+
+### With ElevenLabs API:
+- Voice notifications
+- AI voice assistant
+- Audio feedback for actions
 
 ## Fallback Behavior
 
-The application is designed to work even without API keys:
-- **Google Maps**: Will show a placeholder map
-- **Bland AI**: Will simulate callback requests
-- **Firebase**: Will use local storage for data persistence
+If any API key is missing:
+- **Google Maps**: Map will not load, but other features work
+- **Google Cloud Vision**: Falls back to text-based analysis only
+- **Bland AI**: Callback feature disabled
+- **ElevenLabs**: Voice features disabled
 
 ## Security Notes
 
-- Never commit your `.env` file to version control
-- The `.env` file is already in `.gitignore`
-- API keys are prefixed with `VITE_` to make them available in the browser
-- Consider restricting API keys to specific domains/IPs 
+1. **Never commit your `.env` file** to version control
+2. **Restrict API keys** to your domain in Google Cloud Console
+3. **Monitor API usage** to avoid unexpected charges
+4. **Use environment-specific keys** for development/production
+
+## Testing the Setup
+
+1. Start the development server: `npm run dev`
+2. Check the browser console for any API-related errors
+3. Test image upload to verify Vision API is working
+4. Test map functionality to verify Maps API is working
+5. Test callback feature to verify Bland AI is working
+
+## Troubleshooting
+
+### Image Analysis Not Working
+- Check if `VITE_GOOGLE_CLOUD_VISION_API_KEY` is set
+- Verify the Vision API is enabled in Google Cloud Console
+- Check browser console for API errors
+- Ensure the API key has Vision API permissions
+
+### Map Not Loading
+- Check if `VITE_GOOGLE_MAPS_API_KEY` is set
+- Verify Maps JavaScript API is enabled
+- Check for domain restrictions on the API key
+
+### Callbacks Not Working
+- Verify Bland AI API key is correct
+- Check network connectivity
+- Review browser console for errors 

@@ -8,12 +8,13 @@ interface MapComponentProps {
   onMapClick: (lat: number, lng: number) => void
   focusedReportId?: string
   trafficView: 'all' | 'flow' | 'incidents'
+  incidentType?: 'all' | 'traffic' | 'accident' | 'blocking' | 'normal' | 'moderate' | 'heavy' | 'severe'
   moodFilter: 'all' | 'positive' | 'negative' | 'frustrated' | 'concerned' | 'satisfied' | 'neutral'
   route?: { origin: string; destination: string; routeType?: string; transportMode?: string } | null
   onMapReady?: (map: google.maps.Map) => void
 }
 
-const MapComponent = ({ reports, onMapClick, focusedReportId, trafficView, moodFilter, route, onMapReady }: MapComponentProps) => {
+const MapComponent = ({ reports, onMapClick, focusedReportId, trafficView, incidentType = 'all', moodFilter, route, onMapReady }: MapComponentProps) => {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<google.maps.Map | null>(null)
   const googleRef = useRef<typeof google | null>(null)
@@ -22,6 +23,34 @@ const MapComponent = ({ reports, onMapClick, focusedReportId, trafficView, moodF
   const directionsRendererRef = useRef<google.maps.DirectionsRenderer | null>(null)
   const trafficLayerRef = useRef<google.maps.TrafficLayer | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+
+  // Function to filter reports based on incident type
+  const filterReportsByIncidentType = (reports: Report[], incidentType: string): Report[] => {
+    if (incidentType === 'all') return reports
+    
+    return reports.filter(report => {
+      const desc = report.description.toLowerCase()
+      
+      switch (incidentType) {
+        case 'traffic':
+          return desc.includes('traffic') || desc.includes('congestion') || desc.includes('jam')
+        case 'accident':
+          return desc.includes('accident') || desc.includes('crash') || desc.includes('collision')
+        case 'blocking':
+          return desc.includes('blocking') || desc.includes('blocked') || desc.includes('obstruction')
+        case 'normal':
+          return desc.includes('normal') || desc.includes('clear') || desc.includes('flowing')
+        case 'moderate':
+          return desc.includes('moderate') || desc.includes('slow')
+        case 'heavy':
+          return desc.includes('heavy') || desc.includes('heavy traffic')
+        case 'severe':
+          return desc.includes('severe') || desc.includes('severe congestion')
+        default:
+          return true
+      }
+    })
+  }
 
   // Function to get marker color based on traffic view, mood, and report content
   const getMarkerColor = (trafficView: string, report: Report): string => {
@@ -222,10 +251,14 @@ const MapComponent = ({ reports, onMapClick, focusedReportId, trafficView, moodF
     // Create bounds to fit all markers
     const bounds = new googleRef.current!.maps.LatLngBounds()
 
-    // Filter reports based on traffic view and mood
+    // Filter reports based on traffic view, incident type, and mood
     let filteredReports = reports
-    if (trafficView === 'incidents') {
-      // Show only incident reports
+    
+    // Apply incident type filter first
+    if (trafficView === 'incidents' && incidentType !== 'all') {
+      filteredReports = filterReportsByIncidentType(filteredReports, incidentType)
+    } else if (trafficView === 'incidents') {
+      // Show only incident reports when in incidents view
       filteredReports = reports.filter(report => 
         report.description.toLowerCase().includes('incident') || 
         report.description.toLowerCase().includes('accident') ||
@@ -351,7 +384,7 @@ const MapComponent = ({ reports, onMapClick, focusedReportId, trafficView, moodF
         }, 500)
       }
              }, 100)
-       }, [reports, trafficView])
+       }, [reports, trafficView, incidentType, moodFilter])
 
   // Control traffic layer visibility
   useEffect(() => {

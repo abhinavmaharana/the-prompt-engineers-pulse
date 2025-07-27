@@ -72,6 +72,7 @@ function App() {
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [focusedReportId, setFocusedReportId] = useState<string | null>(null)
   const [trafficView, setTrafficView] = useState<'all' | 'flow' | 'incidents'>('all')
+  const [incidentType, setIncidentType] = useState<'all' | 'traffic' | 'accident' | 'blocking' | 'normal' | 'moderate' | 'heavy' | 'severe'>('all')
   const [moodFilter, setMoodFilter] = useState<'all' | 'positive' | 'negative' | 'frustrated' | 'concerned' | 'satisfied' | 'neutral'>('all')
 
   const [route, setRoute] = useState<{ origin: string; destination: string; routeType?: string; transportMode?: string } | null>(null)
@@ -277,6 +278,110 @@ function App() {
                 uploadTime: new Date()
               }
             }
+          },
+          {
+            id: '4',
+            description: 'Road blocking due to construction work',
+            latitude: 12.9730,
+            longitude: 77.6090,
+            timestamp: new Date(Date.now() - 900000),
+            sentiment: analyzeSentiment('Road blocking due to construction work'),
+            imageAnalysis: {
+              content: ['construction', 'road blocking'],
+              confidence: 0.88,
+              categories: ['construction', 'blocking'],
+              severity: 'medium',
+              predictions: {
+                issueType: 'Road Blocking',
+                urgency: 60,
+                estimatedResponseTime: 'Medium Priority (4-8 hours)',
+                recommendedActions: ['Check construction permits', 'Set up detour signs', 'Coordinate with construction team']
+              },
+              metadata: {
+                fileSize: 1280000,
+                dimensions: { width: 1920, height: 1080 },
+                format: 'image/jpeg',
+                uploadTime: new Date()
+              }
+            }
+          },
+          {
+            id: '5',
+            description: 'Normal traffic flow on main highway',
+            latitude: 12.9810,
+            longitude: 77.5940,
+            timestamp: new Date(Date.now() - 1200000),
+            sentiment: analyzeSentiment('Normal traffic flow on main highway'),
+            imageAnalysis: {
+              content: ['normal flow', 'clear road'],
+              confidence: 0.95,
+              categories: ['traffic', 'flow'],
+              severity: 'low',
+              predictions: {
+                issueType: 'Normal Flow',
+                urgency: 10,
+                estimatedResponseTime: 'No action required',
+                recommendedActions: ['Monitor traffic patterns', 'Maintain current flow']
+              },
+              metadata: {
+                fileSize: 960000,
+                dimensions: { width: 1920, height: 1080 },
+                format: 'image/jpeg',
+                uploadTime: new Date()
+              }
+            }
+          },
+          {
+            id: '6',
+            description: 'Moderate congestion on ring road',
+            latitude: 12.9550,
+            longitude: 77.5800,
+            timestamp: new Date(Date.now() - 1500000),
+            sentiment: analyzeSentiment('Moderate congestion on ring road'),
+            imageAnalysis: {
+              content: ['moderate congestion', 'slow traffic'],
+              confidence: 0.82,
+              categories: ['traffic', 'congestion'],
+              severity: 'medium',
+              predictions: {
+                issueType: 'Moderate Congestion',
+                urgency: 45,
+                estimatedResponseTime: 'Medium Priority (4-8 hours)',
+                recommendedActions: ['Monitor traffic signals', 'Adjust timing if needed', 'Consider alternative routes']
+              },
+              metadata: {
+                fileSize: 1120000,
+                dimensions: { width: 1920, height: 1080 },
+                format: 'image/jpeg',
+                uploadTime: new Date()
+              }
+            }
+          },
+          {
+            id: '7',
+            description: 'Severe congestion on airport road',
+            latitude: 12.9900,
+            longitude: 77.6000,
+            timestamp: new Date(Date.now() - 1800000),
+            sentiment: analyzeSentiment('Severe congestion on airport road'),
+            imageAnalysis: {
+              content: ['severe congestion', 'traffic jam'],
+              confidence: 0.90,
+              categories: ['traffic', 'congestion'],
+              severity: 'critical',
+              predictions: {
+                issueType: 'Severe Congestion',
+                urgency: 85,
+                estimatedResponseTime: 'Immediate (0-2 hours)',
+                recommendedActions: ['Implement emergency traffic diversion', 'Deploy traffic police', 'Update navigation apps']
+              },
+              metadata: {
+                fileSize: 1760000,
+                dimensions: { width: 1920, height: 1080 },
+                format: 'image/jpeg',
+                uploadTime: new Date()
+              }
+            }
           }
         ])
       }
@@ -363,6 +468,7 @@ function App() {
                 onMapClick={handleMapClick}
                 focusedReportId={focusedReportId || undefined}
                 trafficView={trafficView}
+                incidentType={incidentType}
                 moodFilter={moodFilter}
                 route={route}
                 onMapReady={handleMapReady}
@@ -510,43 +616,146 @@ function App() {
            </div>
          )}
 
-         {/* Incidents Legend */}
+         {/* Incidents Legend with Toggle */}
          {trafficView === 'incidents' && (
            <div className="absolute bottom-8 left-8 lg:bottom-12 lg:left-32 z-10">
              <Card className="bg-white/90 backdrop-blur-2xl shadow-glass border border-white/30">
                <CardContent className="p-4">
-                 <div className="space-y-3">
-                   <div className="text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wide">Traffic Incidents</div>
-                   <div className="flex items-center gap-2 mb-2">
-                     <div className="w-3 h-3 bg-red-600 rounded-full"></div>
-                     <span className="text-sm font-medium text-gray-800">Traffic incident</span>
-                   </div>
-                   <div className="flex items-center gap-2 mb-2">
-                     <div className="w-3 h-3 bg-red-800 rounded-full"></div>
-                     <span className="text-sm font-medium text-gray-800">Accident</span>
-                   </div>
-                   <div className="flex items-center gap-2 mb-3">
-                     <div className="w-3 h-3 bg-purple-600 rounded-full"></div>
-                     <span className="text-sm font-medium text-gray-800">Road blocking</span>
-                   </div>
-                   
-                   <div className="border-t border-gray-200 pt-2">
-                     <div className="text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wide">Road Traffic</div>
-                     <div className="flex items-center gap-2 mb-2">
-                       <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                       <span className="text-sm font-medium text-gray-800">Normal flow</span>
-                     </div>
-                     <div className="flex items-center gap-2 mb-2">
-                       <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                       <span className="text-sm font-medium text-gray-800">Moderate congestion</span>
-                     </div>
-                     <div className="flex items-center gap-2 mb-2">
-                       <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                       <span className="text-sm font-medium text-gray-800">Heavy traffic</span>
-                     </div>
-                     <div className="flex items-center gap-2">
-                       <div className="w-3 h-3 bg-red-800 rounded-full"></div>
-                       <span className="text-sm font-medium text-gray-800">Severe congestion</span>
+                 <div className="space-y-4">
+                                       {/* Incident Type Toggle */}
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Incident Type</div>
+                        {incidentType !== 'all' && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setIncidentType('all')}
+                            className="text-xs h-6 px-2 text-gray-500 hover:text-gray-700"
+                          >
+                            Reset
+                          </Button>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button
+                          size="sm"
+                          variant={incidentType === 'all' ? 'default' : 'outline'}
+                          onClick={() => setIncidentType('all')}
+                          className="text-xs h-8"
+                        >
+                          All
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant={incidentType === 'traffic' ? 'default' : 'outline'}
+                          onClick={() => setIncidentType('traffic')}
+                          className="text-xs h-8"
+                        >
+                          Traffic
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant={incidentType === 'accident' ? 'default' : 'outline'}
+                          onClick={() => setIncidentType('accident')}
+                          className="text-xs h-8"
+                        >
+                          Accident
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant={incidentType === 'blocking' ? 'default' : 'outline'}
+                          onClick={() => setIncidentType('blocking')}
+                          className="text-xs h-8"
+                        >
+                          Road Blocking
+                        </Button>
+                      </div>
+                    </div>
+
+                                       {/* Traffic Flow Toggle */}
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Traffic Flow</div>
+                        {incidentType !== 'all' && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setIncidentType('all')}
+                            className="text-xs h-6 px-2 text-gray-500 hover:text-gray-700"
+                          >
+                            Reset
+                          </Button>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button
+                          size="sm"
+                          variant={incidentType === 'normal' ? 'default' : 'outline'}
+                          onClick={() => setIncidentType('normal')}
+                          className="text-xs h-8"
+                        >
+                          Normal Flow
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant={incidentType === 'moderate' ? 'default' : 'outline'}
+                          onClick={() => setIncidentType('moderate')}
+                          className="text-xs h-8"
+                        >
+                          Moderate
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant={incidentType === 'heavy' ? 'default' : 'outline'}
+                          onClick={() => setIncidentType('heavy')}
+                          className="text-xs h-8"
+                        >
+                          Heavy Traffic
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant={incidentType === 'severe' ? 'default' : 'outline'}
+                          onClick={() => setIncidentType('severe')}
+                          className="text-xs h-8"
+                        >
+                          Severe
+                        </Button>
+                      </div>
+                    </div>
+
+                   {/* Legend */}
+                   <div className="border-t border-gray-200 pt-3">
+                     <div className="text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wide">Legend</div>
+                     <div className="space-y-2">
+                       <div className="flex items-center gap-2">
+                         <div className="w-3 h-3 bg-red-600 rounded-full"></div>
+                         <span className="text-xs font-medium text-gray-800">Traffic incident</span>
+                       </div>
+                       <div className="flex items-center gap-2">
+                         <div className="w-3 h-3 bg-red-800 rounded-full"></div>
+                         <span className="text-xs font-medium text-gray-800">Accident</span>
+                       </div>
+                       <div className="flex items-center gap-2">
+                         <div className="w-3 h-3 bg-purple-600 rounded-full"></div>
+                         <span className="text-xs font-medium text-gray-800">Road blocking</span>
+                       </div>
+                       <div className="flex items-center gap-2">
+                         <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                         <span className="text-xs font-medium text-gray-800">Normal flow</span>
+                       </div>
+                       <div className="flex items-center gap-2">
+                         <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                         <span className="text-xs font-medium text-gray-800">Moderate congestion</span>
+                       </div>
+                       <div className="flex items-center gap-2">
+                         <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                         <span className="text-xs font-medium text-gray-800">Heavy traffic</span>
+                       </div>
+                       <div className="flex items-center gap-2">
+                         <div className="w-3 h-3 bg-red-800 rounded-full"></div>
+                         <span className="text-xs font-medium text-gray-800">Severe congestion</span>
+                       </div>
                      </div>
                    </div>
                  </div>

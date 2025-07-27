@@ -207,7 +207,7 @@ frontend/
 
 ## 📄 License
 
-This project is part of the Pulse AI hackathon project.
+This project is part of the Google Agentic AI Day.
 
 ## 🆘 Support
 

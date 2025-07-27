@@ -64,9 +64,17 @@ const ImageAnalysisDisplay: React.FC<ImageAnalysisDisplayProps> = ({ analysis })
               <EyeIcon className="w-5 h-5 text-blue-600" />
               <h4 className="font-semibold text-gray-800">AI Analysis</h4>
             </div>
-            <Badge className={getSeverityColor(analysis.severity)}>
-              {analysis.severity.toUpperCase()}
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge 
+                variant={analysis.confidence > 0.5 ? "default" : "secondary"}
+                className={analysis.confidence > 0.5 ? "bg-green-500 text-white" : "bg-gray-500 text-white"}
+              >
+                {analysis.confidence > 0.5 ? "REAL AI" : "FALLBACK"}
+              </Badge>
+              <Badge className={getSeverityColor(analysis.severity)}>
+                {analysis.severity.toUpperCase()}
+              </Badge>
+            </div>
           </div>
 
           {/* Confidence Score */}
@@ -105,6 +113,21 @@ const ImageAnalysisDisplay: React.FC<ImageAnalysisDisplayProps> = ({ analysis })
               <span className="text-xs text-gray-500">Estimated Response</span>
             </div>
             <div className="font-medium text-gray-800">{analysis.predictions.estimatedResponseTime}</div>
+          </div>
+
+          {/* Detected Content */}
+          <div className="bg-white rounded-lg p-3 border">
+            <div className="text-xs text-gray-500 mb-2">Content Detected in Image</div>
+            <div className="space-y-1 max-h-32 overflow-y-auto">
+              {analysis.content.map((item, index) => (
+                <div key={index} className="text-xs text-gray-700 bg-gray-50 px-2 py-1 rounded">
+                  {item}
+                </div>
+              ))}
+            </div>
+            {analysis.content.length === 0 && (
+              <div className="text-xs text-gray-500 italic">No specific content detected</div>
+            )}
           </div>
 
           {/* Categories */}
