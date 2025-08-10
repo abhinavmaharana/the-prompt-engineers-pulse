@@ -6,6 +6,7 @@ import json
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import httpx
+from live_scraper import start_live_scraping_service, get_live_traffic_data
 
 # ================= 1. SETUP =================
 # Initialize FastAPI app
@@ -55,56 +56,49 @@ def get_fallback_data():
 @app.get("/api/traffic-updates")
 async def get_traffic_updates():
     """
-    This single endpoint scrapes the web, processes with an LLM,
-    and returns the structured data to the frontend.
+    This endpoint returns the latest live traffic data from the continuous scraper.
     """
     try:
-        # Step 1: Fetch Website Content
-        url = "https://btp.karnataka.gov.in/en"
-        async with httpx.AsyncClient() as client_http:
-            response = await client_http.get(url, timeout=20)
-            response.raise_for_status()
-
-        # Step 2: Parse and Extract Text
-        soup = BeautifulSoup(response.text, "html.parser")
-        texts = [tag.strip() for tag in soup.find_all(string=True) if tag.parent.name not in ['style', 'script', 'head', 'meta', '[document]'] and tag.strip()]
-        joined_text = "\n".join(texts)
-
-        # Step 3: Process with LLM
-        prompt = f"""
-        You are analyzing content from Bengaluru Traffic Police website. 
-        Return ONLY a valid JSON object with this exact structure:
-        {{
-          "alerts": ["alert1", "alert2", "alert3", "alert4", "alert5"],
-          "events": ["event1", "event2", "event3", "event4", "event5"], 
-          "news": ["news1", "news2", "news3", "news4", "news5"]
-        }}
-        Rules:
-        - Each array must have at least 5 items.
-        - Each item must be a clear, detailed sentence (60-120 chars).
-        - Return ONLY the JSON object, no other text.
-        Website content:
-        {joined_text[:8000]}
-        """
-        
-        response_llm = client.chat.completions.create(
-            model=LLM_MODEL,
-            messages=[{"role": "user", "content": prompt}],
-            stream=False,
-            timeout=45,
-        )
-        llm_output = response_llm.choices[0].message.content.strip()
-        
-        if llm_output.startswith("```json"):
-            llm_output = llm_output.split("```json")[1].split("```")[0]
-        
-        traffic_data = json.loads(llm_output)
-        
-        if not all(key in traffic_data for key in ['alerts', 'events', 'news']):
-            raise ValueError("Missing required keys in LLM response")
-            
+        # Get the latest data from the live scraper
+        traffic_data = get_live_traffic_data()
         return traffic_data
-
     except Exception as e:
-        print(f"❌ An error occurred: {e}. Returning fallback data.")
+        print(f"❌ Error getting live traffic data: {e}")
         return get_fallback_data()
+
+@app.get("/api/traffic-updates/live")
+async def get_live_traffic_stream():
+    """
+    This endpoint provides real-time streaming updates of traffic data.
+    """
+    try:
+        from live_scraper import live_scraper
+        # Return the latest data with streaming headers
+        traffic_data = get_live_traffic_data()
+        return traffic_data
+    except Exception as e:
+        print(f"❌ Error in live stream: {e}")
+        return get_fallback_data()
+
+# ================= 3. SERVER STARTUP =================
+if __name__ == "__main__":
+    import uvicorn
+    print("🚀 Starting CityPulse Backend Server...")
+    print("🌐 Server will be available at: http://localhost:8000")
+    print("📚 API Documentation: http://localhost:8000/docs")
+    print("🔌 Traffic Updates API: http://localhost:8000/api/traffic-updates")
+    print("🔌 Live Stream API: http://localhost:8000/api/traffic-updates/live")
+    print("⏹️  Press Ctrl+C to stop the server")
+    print("-" * 60)
+    
+    try:
+        # Start the live scraping service
+        print("🔄 Starting live traffic scraping service...")
+        start_live_scraping_service()
+        
+        # Start the FastAPI server
+        uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
+    except KeyboardInterrupt:
+        print("\n🛑 Server stopped by user")
+    except Exception as e:
+        print(f"❌ Server error: {e}")

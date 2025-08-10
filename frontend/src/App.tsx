@@ -786,14 +786,12 @@ function App() {
                      </div>
                    </section>
 
-             {/* Feed Section */}
-             <section className="w-full px-6 py-12 relative">
-               <div className="max-w-7xl mx-auto">
-                 <div className="flex items-center justify-between mb-4">
-                   <Feed reports={reports} onFocusReport={handleFocusReport} />
-                 </div>
-               </div>
-             </section>
+                   {/* Feed Section */}
+                   <section className="w-full px-6 py-12 relative">
+                     <div className="max-w-7xl mx-auto">
+                       <Feed reports={reports} onFocusReport={handleFocusReport} />
+                     </div>
+                   </section>
 
       {/* WhatsApp Button */}
       <div className="fixed bottom-6 right-6 z-50">
